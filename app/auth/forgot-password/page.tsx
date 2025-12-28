@@ -76,6 +76,16 @@ export default function ForgotPasswordPage() {
                 Password reset link has been sent to <strong>{email}</strong>
               </p>
               <p className="text-xs text-muted-foreground">Check your spam folder if you don't see it</p>
+              
+              <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-left">
+                <p className="text-xs text-yellow-600 dark:text-yellow-500">
+                  <strong>⚠️ Development Notice:</strong> Email sending is not configured. SMTP credentials need to be set up in <code className="bg-black/10 px-1 py-0.5 rounded">auth-service/.env</code> for actual emails to be sent. Use the test accounts for now:
+                </p>
+                <ul className="text-xs text-yellow-600 dark:text-yellow-500 mt-2 space-y-1 ml-4">
+                  <li>• admin@bugtracker.com / TestPass123!</li>
+                  <li>• developer@bugtracker.com / TestPass123!</li>
+                </ul>
+              </div>
             </motion.div>
           )}
 

@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+**/node_modules
+services/*/node_modules
+prisma/node_modules
 
 # next.js
 /.next/
@@ -9,6 +12,7 @@
 
 # production
 /build
+/dist
 
 # debug
 npm-debug.log*
@@ -17,7 +21,9 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
+.env
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -25,3 +31,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploads
+uploads/
+services/*/uploads

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ChevronRight, AlertCircle, Clock, CheckCircle2 } from "lucide-react"
+import { Pencil, Trash2, AlertCircle, Clock, CheckCircle2 } from "lucide-react"
 
 interface Issue {
   id: string
@@ -16,6 +16,8 @@ interface Issue {
 interface IssueTableProps {
   issues: Issue[]
   onRowClick?: (issue: Issue) => void
+  onEdit?: (issue: Issue) => void
+  onDelete?: (issue: Issue) => void
 }
 
 const statusConfig = {
@@ -32,7 +34,7 @@ const priorityConfig = {
   low: { label: "Low", color: "text-blue-500" },
 }
 
-export function IssueTable({ issues, onRowClick }: IssueTableProps) {
+export function IssueTable({ issues, onRowClick, onEdit, onDelete }: IssueTableProps) {
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
@@ -45,6 +47,7 @@ export function IssueTable({ issues, onRowClick }: IssueTableProps) {
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">Priority</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">Assignee</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">Updated</th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -90,11 +93,33 @@ export function IssueTable({ issues, onRowClick }: IssueTableProps) {
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{issue.updated}</td>
-                  <td className="px-6 py-4 text-right">
-                    <ChevronRight
-                      size={18}
-                      className="text-muted-foreground group-hover:text-foreground transition-smooth"
-                    />
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      {onEdit && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onEdit(issue)
+                          }}
+                          className="p-2 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-smooth"
+                          title="Edit bug"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDelete(issue)
+                          }}
+                          className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-smooth"
+                          title="Delete bug"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </motion.tr>
               )

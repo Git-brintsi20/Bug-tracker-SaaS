@@ -1,75 +1,107 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { TeamMemberCard } from "@/components/team-member-card"
-import { Search, Plus } from "lucide-react"
+import { Search, Plus, Shield, UserCog, Eye, Trash2 } from "lucide-react"
+import { useOrganization } from "@/lib/contexts/OrganizationContext"
+import axios from "axios"
 
-const mockTeamMembers = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    role: "admin" as const,
-    avatar: "bg-gradient-to-br from-primary to-accent",
-    bugsResolved: 24,
-    issuesAssigned: 8,
-  },
-  {
-    id: "2",
-    name: "Alex Smith",
-    email: "alex@example.com",
-    role: "member" as const,
-    avatar: "bg-gradient-to-br from-blue-500 to-cyan-500",
-    bugsResolved: 18,
-    issuesAssigned: 12,
-  },
-  {
-    id: "3",
-    name: "Sarah Wilson",
-    email: "sarah@example.com",
-    role: "member" as const,
-    avatar: "bg-gradient-to-br from-purple-500 to-pink-500",
-    bugsResolved: 15,
-    issuesAssigned: 6,
-  },
-  {
-    id: "4",
-    name: "Maria Garcia",
-    email: "maria@example.com",
-    role: "member" as const,
-    avatar: "bg-gradient-to-br from-orange-500 to-red-500",
-    bugsResolved: 21,
-    issuesAssigned: 10,
-  },
-  {
-    id: "5",
-    name: "Sam Wilson",
-    email: "sam@example.com",
-    role: "member" as const,
-    avatar: "bg-gradient-to-br from-green-500 to-emerald-500",
-    bugsResolved: 12,
-    issuesAssigned: 9,
-  },
-]
+interface Member {
+  id: string
+  role: string
+  joinedAt: string
+  user: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }
+}
 
 export function TeamPageContent() {
+  const { currentOrg } = useOrganization()
+  const [members, setMembers] = useState<Member[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState<string | null>(null)
 
-  const filteredMembers = mockTeamMembers.filter((member) => {
+  useEffect(() => {
+    if (currentOrg) {
+      fetchMembers()
+    }
+  }, [currentOrg])
+
+  const fetchMembers = async () => {
+    if (!currentOrg) return
+
+    try {
+      setLoading(true)
+      const response = await axios.get(`http://localhost:5001/api/organizations/${currentOrg.id}/members`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      })
+      setMembers(response.data)
+    } catch (error) {
+      console.error('Failed to fetch members:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRoleChange = async (memberId: string, newRole: string) => {
+    if (!currentOrg) return
+
+    try {
+      await axios.put(
+        `http://localhost:5001/api/organizations/${currentOrg.id}/members/${memberId}/role`,
+        { role: newRole },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } }
+      )
+      fetchMembers()
+    } catch (error) {
+      console.error('Failed to update role:', error)
+    }
+  }
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!currentOrg || !confirm('Are you sure you want to remove this member?')) return
+
+    try {
+      await axios.delete(
+        `http://localhost:5001/api/organizations/${currentOrg.id}/members/${memberId}`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } }
+      )
+      fetchMembers()
+    } catch (error) {
+      console.error('Failed to remove member:', error)
+    }
+  }
+
+  const filteredMembers = members.filter((member) => {
+    const fullName = `${member.user.firstName} ${member.user.lastName}`.toLowerCase()
     const matchesSearch =
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase())
+      fullName.includes(searchTerm.toLowerCase()) ||
+      member.user.email.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = !roleFilter || member.role === roleFilter
     return matchesSearch && matchesRole
   })
 
   const stats = {
-    total: mockTeamMembers.length,
-    admins: mockTeamMembers.filter((m) => m.role === "admin").length,
-    totalBugsResolved: mockTeamMembers.reduce((sum, m) => sum + m.bugsResolved, 0),
-    totalIssuesAssigned: mockTeamMembers.reduce((sum, m) => sum + m.issuesAssigned, 0),
+    total: members.length,
+    admins: members.filter(m => m.role === 'ADMIN').length,
+    totalBugsResolved: 0, // Would need to fetch from backend
+    totalIssuesAssigned: 0, // Would need to fetch from backend
+  }
+
+  const roleIcons: Record<string, any> = {
+    ADMIN: Shield,
+    DEVELOPER: UserCog,
+    VIEWER: Eye,
+  }
+
+  const roleColors: Record<string, string> = {
+    ADMIN: 'text-red-600 bg-red-100 dark:bg-red-950',
+    DEVELOPER: 'text-blue-600 bg-blue-100 dark:bg-blue-950',
+    VIEWER: 'text-gray-600 bg-gray-100 dark:bg-gray-800',
   }
 
   return (
@@ -160,35 +192,77 @@ export function TeamPageContent() {
 
       {/* Members Grid */}
       <div className="flex-1 p-6 md:p-8">
-        {filteredMembers.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
-            {filteredMembers.map((member, index) => (
-              <motion.div
-                key={member.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <TeamMemberCard {...member} />
-              </motion.div>
-            ))}
-          </motion.div>
-        ) : (
-          <div className="flex items-center justify-center py-12 rounded-lg border border-dashed border-border">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                <Search size={24} className="text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground">No team members found</p>
-              <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
+        <div className="max-w-7xl mx-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
             </div>
-          </div>
-        )}
+          ) : filteredMembers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredMembers.map((member, index) => {
+                const RoleIcon = roleIcons[member.role]
+                return (
+                  <motion.div
+                    key={member.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-6 bg-card border border-border rounded-lg hover:shadow-lg transition-shadow"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-lg font-bold">
+                          {member.user.firstName.charAt(0)}{member.user.lastName.charAt(0)}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">
+                            {member.user.firstName} {member.user.lastName}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">{member.user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                      <div className="flex items-center gap-2">
+                        {RoleIcon && <RoleIcon size={16} />}
+                        <span className={`text-xs font-medium px-2 py-1 rounded ${roleColors[member.role]}`}>
+                          {member.role}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <select
+                          value={member.role}
+                          onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                          className="text-xs px-2 py-1 bg-input border border-border rounded"
+                        >
+                          <option value="ADMIN">Admin</option>
+                          <option value="DEVELOPER">Developer</option>
+                          <option value="VIEWER">Viewer</option>
+                        </select>
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="p-1 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded transition-colors"
+                          title="Remove member"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 text-xs text-muted-foreground">
+                      Joined {new Date(member.joinedAt).toLocaleDateString()}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No team members found</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

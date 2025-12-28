@@ -1,0 +1,26 @@
+{
+  "name": "bugtracker-prisma",
+  "version": "1.0.0",
+  "description": "Prisma schema and migrations for Bug Tracker SaaS",
+  "main": "index.js",
+  "scripts": {
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "node seed.js",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate"
+  },
+  "keywords": ["prisma", "database"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^5.8.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.8.0",
+    "bcryptjs": "^2.4.3"
+  },
+  "prisma": {
+    "seed": "node seed.js"
+  }
+}

@@ -2,14 +2,24 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown, LayoutGrid, FileText, Users, Settings, Menu, X, LogOut } from "lucide-react"
+import { OrganizationSelector } from "@/components/organization-selector"
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true)
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null)
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleSignOut = () => {
+    // Clear tokens
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    // Redirect to login
+    router.push('/auth/login')
+  }
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/")
 
@@ -67,8 +77,8 @@ export function Sidebar() {
         className="fixed left-0 top-0 h-screen w-72 bg-background border-r border-border z-30 flex flex-col md:relative md:translate-x-0 md:opacity-100 overflow-hidden"
       >
         {/* Header */}
-        <div className="p-6 border-b border-border flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+        <div className="p-6 border-b border-border">
+          <Link href="/" className="flex items-center gap-2 mb-4">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -76,7 +86,8 @@ export function Sidebar() {
             </div>
             <span className="text-lg font-bold text-foreground">BugTracker</span>
           </Link>
-          <button onClick={() => setIsOpen(false)} className="md:hidden">
+          <OrganizationSelector />
+          <button onClick={() => setIsOpen(false)} className="md:hidden absolute top-6 right-6">
             <X size={20} />
           </button>
         </div>
@@ -86,22 +97,20 @@ export function Sidebar() {
           {navigationItems.map((item) => (
             <div key={item.label}>
               <motion.div whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }}>
-                <button
-                  onClick={() => {
+                <Link
+                  href={item.href}
+                  onClick={(e) => {
                     if (item.submenu) {
+                      e.preventDefault()
                       toggleMenu(item.label)
                     }
                   }}
-                  asChild={!item.submenu}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-smooth ${
+                    isActive(item.href)
+                      ? "bg-primary/20 text-primary font-medium"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
                 >
-                  <Link
-                    href={item.href}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-smooth ${
-                      isActive(item.href)
-                        ? "bg-primary/20 text-primary font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
                     <div className="flex items-center gap-3">
                       {item.icon}
                       <span>{item.label}</span>
@@ -116,8 +125,7 @@ export function Sidebar() {
                         <ChevronDown size={16} />
                       </motion.div>
                     )}
-                  </Link>
-                </button>
+                </Link>
               </motion.div>
 
               {/* Submenu */}
@@ -162,7 +170,10 @@ export function Sidebar() {
               <p className="text-xs text-muted-foreground">Your account</p>
             </div>
           </Link>
-          <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-destructive hover:bg-destructive/10 transition-smooth text-sm font-medium">
+          <button 
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-destructive hover:bg-destructive/10 transition-smooth text-sm font-medium"
+          >
             <LogOut size={18} />
             Sign out
           </button>

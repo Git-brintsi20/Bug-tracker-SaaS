@@ -1,77 +1,177 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { IssueTable } from "@/components/issue-table"
 import { Search, Filter, Plus, Download } from "lucide-react"
-
-const mockIssues = [
-  {
-    id: "BUG-001",
-    title: "Dashboard not loading on mobile devices",
-    status: "in-progress" as const,
-    priority: "critical" as const,
-    assignee: "John Doe",
-    created: "2 days ago",
-    updated: "1h ago",
-  },
-  {
-    id: "BUG-002",
-    title: "Login page CSS broken on Safari",
-    status: "open" as const,
-    priority: "high" as const,
-    assignee: "Alex Smith",
-    created: "1 day ago",
-    updated: "30m ago",
-  },
-  {
-    id: "BUG-003",
-    title: "API timeout issues on slow networks",
-    status: "review" as const,
-    priority: "critical" as const,
-    assignee: "Sam Wilson",
-    created: "3 days ago",
-    updated: "2h ago",
-  },
-  {
-    id: "BUG-004",
-    title: "Fix typo in footer",
-    status: "closed" as const,
-    priority: "low" as const,
-    assignee: "Maria Garcia",
-    created: "5 days ago",
-    updated: "1 day ago",
-  },
-  {
-    id: "BUG-005",
-    title: "Add dark mode toggle",
-    status: "open" as const,
-    priority: "medium" as const,
-    assignee: "John Doe",
-    created: "4 days ago",
-    updated: "3 days ago",
-  },
-  {
-    id: "BUG-006",
-    title: "Update documentation",
-    status: "in-progress" as const,
-    priority: "low" as const,
-    assignee: "Alex Smith",
-    created: "6 days ago",
-    updated: "5h ago",
-  },
-]
+import { bugApi } from "@/lib/api"
+import { useOrganization } from "@/lib/contexts/OrganizationContext"
+import { CreateBugModal } from "@/components/create-bug-modal"
+import { EditBugModal } from "@/components/edit-bug-modal"
+import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog"
+import { BugDetailModal } from "@/components/bug-detail-modal"
+import { AdvancedFilters, FilterValues } from "@/components/advanced-filters"
 
 export function IssuesPageContent() {
+  const { currentOrg } = useOrganization()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
+  const [issues, setIssues] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false)
+  const [selectedBug, setSelectedBug] = useState<any>(null)
+  const [selectedBugId, setSelectedBugId] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [advancedFilters, setAdvancedFilters] = useState<FilterValues>({
+    status: [],
+    priority: [],
+    assignee: null,
+    dateFrom: "",
+    dateTo: "",
+    labels: []
+  })
 
-  const filteredIssues = mockIssues.filter((issue) => {
+  useEffect(() => {
+    if (currentOrg) {
+      fetchIssues()
+    }
+  }, [statusFilter, currentOrg, advancedFilters])
+
+  // Listen for real-time updates
+  useEffect(() => {
+    const handleBugCreated = (event: CustomEvent) => {
+      const bug = event.detail
+      if (bug.organizationId === currentOrg?.id) {
+        fetchIssues()
+      }
+    }
+
+    const handleBugUpdated = (event: CustomEvent) => {
+      const bug = event.detail
+      if (bug.organizationId === currentOrg?.id) {
+        fetchIssues()
+      }
+    }
+
+    const handleBugDeleted = (event: CustomEvent) => {
+      fetchIssues()
+    }
+
+    window.addEventListener('bug-created', handleBugCreated as EventListener)
+    window.addEventListener('bug-updated', handleBugUpdated as EventListener)
+    window.addEventListener('bug-deleted', handleBugDeleted as EventListener)
+
+    return () => {
+      window.removeEventListener('bug-created', handleBugCreated as EventListener)
+      window.removeEventListener('bug-updated', handleBugUpdated as EventListener)
+      window.removeEventListener('bug-deleted', handleBugDeleted as EventListener)
+    }
+  }, [currentOrg])
+
+  const fetchIssues = async () => {
+    if (!currentOrg) return
+    
+    try {
+      setLoading(true)
+      const params: any = { organizationId: currentOrg.id }
+      
+      // Apply status filter from simple select or advanced filters
+      if (statusFilter) {
+        params.status = statusFilter
+      } else if (advancedFilters.status.length > 0) {
+        params.status = advancedFilters.status.join(',')
+      }
+      
+      // Apply priority filter
+      if (advancedFilters.priority.length > 0) {
+        params.priority = advancedFilters.priority.join(',')
+      }
+      
+      // Apply assignee filter
+      if (advancedFilters.assignee) {
+        if (advancedFilters.assignee === 'unassigned') {
+          params.assignee = 'null'
+        } else {
+          params.assignee = advancedFilters.assignee
+        }
+      }
+      
+      // Apply date range
+      if (advancedFilters.dateFrom) {
+        params.dateFrom = advancedFilters.dateFrom
+      }
+      if (advancedFilters.dateTo) {
+        params.dateTo = advancedFilters.dateTo
+      }
+      
+      const response = await bugApi.getAll(params)
+      
+      // Transform API data to match UI format
+      const transformedIssues = response.data.map((bug: any) => ({
+        id: bug.id,
+        title: bug.title,
+        status: bug.status.toLowerCase(),
+        priority: bug.priority.toLowerCase(),
+        assignee: bug.assignedTo ? `${bug.assignedTo.firstName} ${bug.assignedTo.lastName}` : "Unassigned",
+        created: new Date(bug.createdAt).toLocaleDateString(),
+        updated: new Date(bug.updatedAt).toLocaleDateString(),
+      }))
+      
+      setIssues(transformedIssues)
+    } catch (error) {
+      console.error('Failed to fetch bugs:', error)
+      // Fallback to empty array
+      setIssues([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleEdit = (bug: any) => {
+    setSelectedBug(bug)
+    setIsEditModalOpen(true)
+  }
+
+  const handleRowClick = (bug: any) => {
+    setSelectedBugId(bug.id)
+    setIsDetailModalOpen(true)
+  }
+
+  const handleDelete = (bug: any) => {
+    setSelectedBug(bug)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!selectedBug) return
+
+    setDeleteLoading(true)
+    try {
+      await bugApi.delete(selectedBug.id)
+      setIsDeleteDialogOpen(false)
+      setSelectedBug(null)
+      fetchIssues()
+    } catch (err) {
+      console.error('Failed to delete bug:', err)
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const handleApplyAdvancedFilters = (filters: FilterValues) => {
+    setAdvancedFilters(filters)
+    setStatusFilter(null) // Clear simple status filter when using advanced
+  }
+
+  const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
       issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       issue.id.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = !statusFilter || issue.status === statusFilter
-    return matchesSearch && matchesStatus
+    return matchesSearch
   })
 
   return (
@@ -95,6 +195,7 @@ export function IssuesPageContent() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setIsCreateModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-smooth"
               >
                 <Plus size={18} /> New Issue
@@ -125,8 +226,11 @@ export function IssuesPageContent() {
               <option value="review">Review</option>
               <option value="closed">Closed</option>
             </select>
-            <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth">
-              <Filter size={18} /> More
+            <button 
+              onClick={() => setIsAdvancedFiltersOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth"
+            >
+              <Filter size={18} /> More Filters
             </button>
           </div>
 
@@ -134,7 +238,7 @@ export function IssuesPageContent() {
           <div className="flex gap-4 mt-4">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Total:</span>
-              <span className="font-semibold text-foreground">{mockIssues.length}</span>
+              <span className="font-semibold text-foreground">{issues.length}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Showing:</span>
@@ -147,8 +251,12 @@ export function IssuesPageContent() {
       {/* Table */}
       <div className="flex-1 p-6 md:p-8 overflow-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {filteredIssues.length > 0 ? (
-            <IssueTable issues={filteredIssues} />
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : filteredIssues.length > 0 ? (
+            <IssueTable issues={filteredIssues} onRowClick={handleRowClick} onEdit={handleEdit} onDelete={handleDelete} />
           ) : (
             <div className="flex items-center justify-center py-12 rounded-lg border border-dashed border-border">
               <div className="text-center">
@@ -162,6 +270,58 @@ export function IssuesPageContent() {
           )}
         </motion.div>
       </div>
+
+      {/* Create Bug Modal */}
+      <CreateBugModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => {
+          fetchIssues()
+        }}
+      />
+
+      {/* Edit Bug Modal */}
+      <EditBugModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setSelectedBug(null)
+        }}
+        onSuccess={() => {
+          fetchIssues()
+        }}
+        bug={selectedBug}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false)
+          setSelectedBug(null)
+        }}
+        onConfirm={confirmDelete}
+        title={selectedBug?.title || ""}
+        loading={deleteLoading}
+      />
+
+      {/* Bug Detail Modal */}
+      <BugDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false)
+          setSelectedBugId(null)
+        }}
+        bugId={selectedBugId}
+      />
+
+      {/* Advanced Filters */}
+      <AdvancedFilters
+        isOpen={isAdvancedFiltersOpen}
+        onClose={() => setIsAdvancedFiltersOpen(false)}
+        onApply={handleApplyAdvancedFilters}
+        currentFilters={advancedFilters}
+      />
     </div>
   )
 }
