@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, MessageSquare, Paperclip, Send, Clock } from "lucide-react"
-import { bugApi } from "@/lib/api"
-import axios from "axios"
+import { X, MessageSquare, Paperclip, Send, Clock, Loader2 } from "lucide-react"
+import { useBug, useComments, useCreateComment } from "@/hooks/useBugs"
+import { formatDistanceToNow } from "date-fns"
 
 interface BugDetailModalProps {
   isOpen: boolean
@@ -12,94 +12,28 @@ interface BugDetailModalProps {
   bugId: string | null
 }
 
-interface Comment {
-  id: string
-  content: string
-  createdAt: string
-  author: {
-    firstName: string
-    lastName: string
-    email: string
-  }
-}
-
 export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"details" | "comments" | "attachments">("details")
-  const [bug, setBug] = useState<any>(null)
-  const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [sendingComment, setSendingComment] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && bugId) {
-      fetchBugDetails()
-      fetchComments()
-    }
-  }, [isOpen, bugId])
+  const { data: bug, isLoading: loadingBug } = useBug(isOpen ? bugId : null)
+  const { data: commentsData, isLoading: loadingComments } = useComments(isOpen ? bugId : null)
+  const createComment = useCreateComment()
 
-  // Listen for real-time comment updates
-  useEffect(() => {
-    const handleCommentAdded = (event: CustomEvent) => {
-      const comment = event.detail
-      if (comment.bugId === bugId) {
-        setComments((prev) => [...prev, comment])
-      }
-    }
+  const comments = commentsData?.comments || []
 
-    window.addEventListener('comment-added', handleCommentAdded as EventListener)
-
-    return () => {
-      window.removeEventListener('comment-added', handleCommentAdded as EventListener)
-    }
-  }, [bugId])
-
-  const fetchBugDetails = async () => {
-    if (!bugId) return
-    
-    try {
-      setLoading(true)
-      const response = await bugApi.getById(bugId)
-      setBug(response.data)
-    } catch (error) {
-      console.error('Failed to fetch bug details:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchComments = async () => {
-    if (!bugId) return
-    
-    try {
-      const response = await axios.get(`http://localhost:5002/api/bugs/${bugId}/comments`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-      })
-      setComments(response.data)
-    } catch (error) {
-      console.error('Failed to fetch comments:', error)
-      setComments([])
-    }
-  }
-
-  const handleSendComment = async () => {
+  const handleSendComment = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!newComment.trim() || !bugId) return
 
-    try {
-      setSendingComment(true)
-      const response = await axios.post(
-        `http://localhost:5002/api/bugs/${bugId}/comments`,
-        { content: newComment },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } }
-      )
-      
-      setComments([...comments, response.data])
-      setNewComment("")
-    } catch (error) {
-      console.error('Failed to send comment:', error)
-    } finally {
-      setSendingComment(false)
-    }
+    createComment.mutate(
+      { bugId, data: { content: newComment } },
+      {
+        onSuccess: () => {
+          setNewComment("")
+        },
+      }
+    )
   }
 
   if (!isOpen || !bugId) return null
@@ -226,41 +160,41 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
           <div className="flex-1 overflow-auto p-6">
             {activeTab === "details" && (
               <div className="space-y-6">
-                {loading ? (
+                {loadingBug ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
-                ) : bug ? (
+                ) : bug?.bug ? (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">Description</label>
                       <p className="text-foreground whitespace-pre-wrap">
-                        {bug.description || "No description provided."}
+                        {bug.bug.description || "No description provided."}
                       </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-2">Reporter</label>
+                        <label className="block text-sm font-medium text-muted-foreground mb-2">Created By</label>
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
-                            {bug.reporter?.firstName?.charAt(0) || "U"}
+                            {bug.bug.creator?.firstName?.charAt(0) || "U"}
                           </div>
                           <span className="text-foreground">
-                            {bug.reporter ? `${bug.reporter.firstName} ${bug.reporter.lastName}` : "Unknown"}
+                            {bug.bug.creator ? `${bug.bug.creator.firstName} ${bug.bug.creator.lastName}` : "Unknown"}
                           </span>
                         </div>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-2">Assigned To</label>
-                        {bug.assignedTo ? (
+                        {bug.bug.assignee ? (
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
-                              {bug.assignedTo.firstName?.charAt(0)}
+                              {bug.bug.assignee.firstName?.charAt(0)}
                             </div>
                             <span className="text-foreground">
-                              {`${bug.assignedTo.firstName} ${bug.assignedTo.lastName}`}
+                              {`${bug.bug.assignee.firstName} ${bug.bug.assignee.lastName}`}
                             </span>
                           </div>
                         ) : (
@@ -272,19 +206,23 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-2">Created</label>
-                        <p className="text-foreground">{new Date(bug.createdAt).toLocaleString()}</p>
+                        <p className="text-foreground">
+                          {formatDistanceToNow(new Date(bug.bug.createdAt), { addSuffix: true })}
+                        </p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-2">Last Updated</label>
-                        <p className="text-foreground">{new Date(bug.updatedAt).toLocaleString()}</p>
+                        <p className="text-foreground">
+                          {formatDistanceToNow(new Date(bug.bug.updatedAt), { addSuffix: true })}
+                        </p>
                       </div>
                     </div>
 
-                    {bug.labels && bug.labels.length > 0 && (
+                    {bug.bug.labels && bug.bug.labels.length > 0 && (
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-2">Labels</label>
                         <div className="flex flex-wrap gap-2">
-                          {bug.labels.map((label: any) => (
+                          {bug.bug.labels.map((label: any) => (
                             <span
                               key={label.id}
                               className="px-3 py-1 rounded-full text-xs font-medium"
@@ -305,26 +243,30 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
 
             {activeTab === "comments" && (
               <div className="space-y-4">
-                {comments.length === 0 ? (
+                {loadingComments ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : comments.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageSquare size={48} className="mx-auto text-muted-foreground mb-3" />
                     <p className="text-muted-foreground">No comments yet. Be the first to comment!</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {comments.map((comment) => (
+                    {comments.map((comment: any) => (
                       <div key={comment.id} className="flex gap-3 p-4 bg-muted/30 rounded-lg">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold flex-shrink-0">
-                          {comment.author.firstName.charAt(0)}
+                          {comment.author?.firstName?.charAt(0) || "U"}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium text-foreground">
-                              {comment.author.firstName} {comment.author.lastName}
+                              {comment.author?.firstName} {comment.author?.lastName}
                             </span>
                             <span className="text-xs text-muted-foreground flex items-center gap-1">
                               <Clock size={12} />
-                              {new Date(comment.createdAt).toLocaleString()}
+                              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                             </span>
                           </div>
                           <p className="text-foreground whitespace-pre-wrap">{comment.content}</p>
@@ -335,7 +277,7 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
                 )}
 
                 {/* Add Comment */}
-                <div className="sticky bottom-0 pt-4 border-t border-border bg-card">
+                <form onSubmit={handleSendComment} className="sticky bottom-0 pt-4 border-t border-border bg-card">
                   <div className="flex gap-3">
                     <textarea
                       value={newComment}
@@ -345,17 +287,17 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
                       rows={3}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                          handleSendComment()
+                          handleSendComment(e)
                         }
                       }}
                     />
                     <button
-                      onClick={handleSendComment}
-                      disabled={!newComment.trim() || sendingComment}
+                      type="submit"
+                      disabled={!newComment.trim() || createComment.isPending}
                       className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-smooth flex items-center gap-2 h-fit"
                     >
-                      {sendingComment ? (
-                        <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      {createComment.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Send size={16} />
                       )}
@@ -364,7 +306,7 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
                   <p className="text-xs text-muted-foreground mt-2">
                     Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">Enter</kbd> to send
                   </p>
-                </div>
+                </form>
               </div>
             )}
 
