@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Calendar, User, Tag, Save, Trash2 } from "lucide-react"
-import axios from "axios"
+import { X, Calendar, User, Tag, Save, Trash2, Search } from "lucide-react"
 import { useOrganization } from "@/lib/contexts/OrganizationContext"
+import { api } from "@/lib/api"
 
 interface AdvancedFiltersProps {
   isOpen: boolean
@@ -14,16 +14,18 @@ interface AdvancedFiltersProps {
 }
 
 export interface FilterValues {
+  search?: string
   status: string[]
   priority: string[]
-  assignee: string | null
-  dateFrom: string
-  dateTo: string
+  assigneeId: string | null
+  createdAfter?: string
+  createdBefore?: string
   labels: string[]
 }
 
 interface OrgMember {
   id: string
+  userId: string
   user: {
     id: string
     firstName: string
@@ -32,10 +34,17 @@ interface OrgMember {
   }
 }
 
+interface Label {
+  id: string
+  name: string
+  color: string
+}
+
 export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: AdvancedFiltersProps) {
-  const { currentOrg } = useOrganization()
+  const { currentOrganization } = useOrganization()
   const [filters, setFilters] = useState<FilterValues>(currentFilters)
   const [members, setMembers] = useState<OrgMember[]>([])
+  const [labels, setLabels] = useState<Label[]>([])
   const [savedFilters, setSavedFilters] = useState<{ name: string; filters: FilterValues }[]>([])
 
   useEffect(() => {
@@ -43,26 +52,35 @@ export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: Ad
   }, [currentFilters])
 
   useEffect(() => {
-    if (isOpen && currentOrg) {
+    if (isOpen && currentOrganization) {
       fetchMembers()
+      fetchLabels()
       loadSavedFilters()
     }
-  }, [isOpen, currentOrg])
+  }, [isOpen, currentOrganization])
 
   const fetchMembers = async () => {
-    if (!currentOrg) return
+    if (!currentOrganization) return
     try {
-      const response = await axios.get(`http://localhost:5001/api/organizations/${currentOrg.id}/members`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-      })
+      const response = await api.organizations.getMembers(currentOrganization.id)
       setMembers(response.data)
     } catch (error) {
       console.error('Failed to fetch members:', error)
     }
   }
 
+  const fetchLabels = async () => {
+    if (!currentOrganization) return
+    try {
+      const response = await api.labels.getLabels(currentOrganization.id)
+      setLabels(response.data)
+    } catch (error) {
+      console.error('Failed to fetch labels:', error)
+    }
+  }
+
   const loadSavedFilters = () => {
-    const saved = localStorage.getItem('savedBugFilters')
+    const saved = localStorage.getItem(`savedBugFilters_${currentOrganization?.id}`)
     if (saved) {
       setSavedFilters(JSON.parse(saved))
     }
@@ -75,13 +93,13 @@ export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: Ad
     const newFilter = { name, filters }
     const updated = [...savedFilters, newFilter]
     setSavedFilters(updated)
-    localStorage.setItem('savedBugFilters', JSON.stringify(updated))
+    localStorage.setItem(`savedBugFilters_${currentOrganization?.id}`, JSON.stringify(updated))
   }
 
   const deleteSavedFilter = (index: number) => {
     const updated = savedFilters.filter((_, i) => i !== index)
     setSavedFilters(updated)
-    localStorage.setItem('savedBugFilters', JSON.stringify(updated))
+    localStorage.setItem(`savedBugFilters_${currentOrganization?.id}`, JSON.stringify(updated))
   }
 
   const applySavedFilter = (savedFilter: { name: string; filters: FilterValues }) => {
@@ -107,13 +125,23 @@ export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: Ad
     }))
   }
 
+  const handleLabelToggle = (labelId: string) => {
+    setFilters(prev => ({
+      ...prev,
+      labels: prev.labels.includes(labelId)
+        ? prev.labels.filter(l => l !== labelId)
+        : [...prev.labels, labelId]
+    }))
+  }
+
   const handleReset = () => {
     const resetFilters: FilterValues = {
+      search: "",
       status: [],
       priority: [],
-      assignee: null,
-      dateFrom: "",
-      dateTo: "",
+      assigneeId: null,
+      createdAfter: "",
+      createdBefore: "",
       labels: []
     }
     setFilters(resetFilters)
@@ -152,6 +180,21 @@ export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: Ad
 
           {/* Content */}
           <div className="p-6 space-y-6">
+            {/* Text Search */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Search size={16} />
+                Search
+              </h3>
+              <input
+                type="text"
+                value={filters.search || ""}
+                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                placeholder="Search by title or description..."
+                className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-smooth"
+              />
+            </div>
+
             {/* Saved Filters */}
             {savedFilters.length > 0 && (
               <div>
@@ -227,33 +270,67 @@ export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: Ad
                 Assignee
               </h3>
               <select
-                value={filters.assignee || ""}
-                onChange={(e) => setFilters({ ...filters, assignee: e.target.value || null })}
+                value={filters.assigneeId || ""}
+                onChange={(e) => setFilters({ ...filters, assigneeId: e.target.value || null })}
                 className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-smooth"
               >
                 <option value="">All Assignees</option>
                 <option value="unassigned">Unassigned</option>
                 {members.map(member => (
-                  <option key={member.user.id} value={member.user.id}>
+                  <option key={member.userId} value={member.userId}>
                     {member.user.firstName} {member.user.lastName}
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* Labels Filter */}
+            {labels.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Tag size={16} />
+                  Labels
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {labels.map(label => (
+                    <button
+                      key={label.id}
+                      onClick={() => handleLabelToggle(label.id)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-smooth border ${
+                        filters.labels.includes(label.id)
+                          ? 'border-2'
+                          : 'border'
+                      }`}
+                      style={{
+                        backgroundColor: filters.labels.includes(label.id)
+                          ? label.color
+                          : `${label.color}20`,
+                        color: filters.labels.includes(label.id)
+                          ? '#fff'
+                          : label.color,
+                        borderColor: label.color,
+                      }}
+                    >
+                      {label.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Date Range Filter */}
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <Calendar size={16} />
-                Date Range
+                Created Date Range
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-muted-foreground mb-1">From</label>
                   <input
                     type="date"
-                    value={filters.dateFrom}
-                    onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                    value={filters.createdAfter || ""}
+                    onChange={(e) => setFilters({ ...filters, createdAfter: e.target.value })}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-smooth"
                   />
                 </div>
@@ -261,8 +338,8 @@ export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: Ad
                   <label className="block text-xs text-muted-foreground mb-1">To</label>
                   <input
                     type="date"
-                    value={filters.dateTo}
-                    onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                    value={filters.createdBefore || ""}
+                    onChange={(e) => setFilters({ ...filters, createdBefore: e.target.value })}
                     className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-smooth"
                   />
                 </div>

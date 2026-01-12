@@ -3,51 +3,37 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, AlertCircle } from "lucide-react"
-import { bugApi } from "@/lib/api"
+import { useCreateBug } from "@/hooks/useBugs"
 import { useOrganization } from "@/lib/contexts/OrganizationContext"
 
 interface CreateBugModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess?: () => void
 }
 
 export function CreateBugModal({ isOpen, onClose, onSuccess }: CreateBugModalProps) {
   const { currentOrg } = useOrganization()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const createBug = useCreateBug()
   
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     priority: "MEDIUM",
+    assigneeId: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!currentOrg) {
-      setError("Please select an organization first")
-      return
-    }
+    if (!currentOrg) return
 
-    setLoading(true)
-    setError("")
-
-    try {
-      await bugApi.create({
-        ...formData,
-        organizationId: currentOrg.id,
-      })
-
-      // Reset form
-      setFormData({ title: "", description: "", priority: "MEDIUM" })
-      onSuccess()
-      onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to create bug")
-    } finally {
-      setLoading(false)
-    }
+    createBug.mutate(formData, {
+      onSuccess: () => {
+        setFormData({ title: "", description: "", priority: "MEDIUM", assigneeId: "" })
+        onSuccess?.()
+        onClose()
+      },
+    })
   }
 
   if (!isOpen) return null
@@ -84,10 +70,12 @@ export function CreateBugModal({ isOpen, onClose, onSuccess }: CreateBugModalPro
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {error && (
+            {createBug.isError && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
                 <AlertCircle size={20} className="text-destructive flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-destructive">{error}</p>
+                <p className="text-sm text-destructive">
+                  {(createBug.error as any)?.response?.data?.message || "Failed to create bug"}
+                </p>
               </div>
             )}
 
@@ -143,16 +131,16 @@ export function CreateBugModal({ isOpen, onClose, onSuccess }: CreateBugModalPro
                 type="button"
                 onClick={onClose}
                 className="px-6 py-2.5 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth"
-                disabled={loading}
+                disabled={createBug.isPending}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={createBug.isPending}
                 className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-smooth flex items-center gap-2"
               >
-                {loading ? (
+                {createBug.isPending ? (
                   <>
                     <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     Creating...

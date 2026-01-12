@@ -2,22 +2,36 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { AlertTriangle, X } from "lucide-react"
+import { useDeleteBug } from "@/hooks/useBugs"
 
 interface DeleteConfirmationDialogProps {
   isOpen: boolean
   onClose: () => void
-  onConfirm: () => void
+  onConfirm?: () => void
+  bugId: string | null
   title: string
-  loading?: boolean
 }
 
 export function DeleteConfirmationDialog({
   isOpen,
   onClose,
   onConfirm,
+  bugId,
   title,
-  loading = false,
 }: DeleteConfirmationDialogProps) {
+  const deleteBug = useDeleteBug()
+
+  const handleDelete = () => {
+    if (!bugId) return
+
+    deleteBug.mutate(bugId, {
+      onSuccess: () => {
+        onConfirm?.()
+        onClose()
+      },
+    })
+  }
+
   if (!isOpen) return null
 
   return (
@@ -50,7 +64,7 @@ export function DeleteConfirmationDialog({
             <button
               onClick={onClose}
               className="p-2 hover:bg-muted rounded-lg transition-colors"
-              disabled={loading}
+              disabled={deleteBug.isPending}
             >
               <X size={20} />
             </button>
@@ -72,16 +86,16 @@ export function DeleteConfirmationDialog({
               type="button"
               onClick={onClose}
               className="px-6 py-2.5 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth"
-              disabled={loading}
+              disabled={deleteBug.isPending}
             >
               Cancel
             </button>
             <button
-              onClick={onConfirm}
-              disabled={loading}
+              onClick={handleDelete}
+              disabled={deleteBug.isPending}
               className="px-6 py-2.5 bg-destructive text-destructive-foreground rounded-lg font-medium hover:bg-destructive/90 disabled:opacity-50 transition-smooth flex items-center gap-2"
             >
-              {loading ? (
+              {deleteBug.isPending ? (
                 <>
                   <div className="w-4 h-4 border-2 border-destructive-foreground/30 border-t-destructive-foreground rounded-full animate-spin" />
                   Deleting...

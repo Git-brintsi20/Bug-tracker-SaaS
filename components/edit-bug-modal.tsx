@@ -3,24 +3,24 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, AlertCircle } from "lucide-react"
-import { bugApi } from "@/lib/api"
+import { useUpdateBug } from "@/hooks/useBugs"
 
 interface EditBugModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess?: () => void
   bug: any
 }
 
 export function EditBugModal({ isOpen, onClose, onSuccess, bug }: EditBugModalProps) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const updateBug = useUpdateBug()
   
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     priority: "MEDIUM",
     status: "OPEN",
+    assigneeId: "",
   })
 
   useEffect(() => {
@@ -30,6 +30,7 @@ export function EditBugModal({ isOpen, onClose, onSuccess, bug }: EditBugModalPr
         description: bug.description || "",
         priority: bug.priority || "MEDIUM",
         status: bug.status || "OPEN",
+        assigneeId: bug.assigneeId || "",
       })
     }
   }, [bug])
@@ -38,18 +39,15 @@ export function EditBugModal({ isOpen, onClose, onSuccess, bug }: EditBugModalPr
     e.preventDefault()
     if (!bug?.id) return
 
-    setLoading(true)
-    setError("")
-
-    try {
-      await bugApi.update(bug.id, formData)
-      onSuccess()
-      onClose()
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to update bug")
-    } finally {
-      setLoading(false)
-    }
+    updateBug.mutate(
+      { id: bug.id, data: formData },
+      {
+        onSuccess: () => {
+          onSuccess?.()
+          onClose()
+        },
+      }
+    )
   }
 
   if (!isOpen || !bug) return null
@@ -86,10 +84,12 @@ export function EditBugModal({ isOpen, onClose, onSuccess, bug }: EditBugModalPr
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {error && (
+            {updateBug.isError && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
                 <AlertCircle size={20} className="text-destructive flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-destructive">{error}</p>
+                <p className="text-sm text-destructive">
+                  {(updateBug.error as any)?.response?.data?.message || "Failed to update bug"}
+                </p>
               </div>
             )}
 
@@ -162,16 +162,16 @@ export function EditBugModal({ isOpen, onClose, onSuccess, bug }: EditBugModalPr
                 type="button"
                 onClick={onClose}
                 className="px-6 py-2.5 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth"
-                disabled={loading}
+                disabled={updateBug.isPending}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={updateBug.isPending}
                 className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-smooth flex items-center gap-2"
               >
-                {loading ? (
+                {updateBug.isPending ? (
                   <>
                     <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     Updating...
