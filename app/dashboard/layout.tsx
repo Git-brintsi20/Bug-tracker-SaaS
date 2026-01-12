@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { Sidebar } from "@/components/sidebar"
-import { OrganizationProvider } from "@/lib/contexts/OrganizationContext"
 import { motion } from "framer-motion"
 import { useSocket } from "@/hooks/useSocket"
 
@@ -30,9 +29,5 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <OrganizationProvider>
-      <DashboardContent>{children}</DashboardContent>
-    </OrganizationProvider>
-  )
+  return <DashboardContent>{children}</DashboardContent>
 }
