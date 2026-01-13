@@ -33,6 +33,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (currentOrg) {
       fetchStatistics()
+    } else {
+      setLoading(false)
     }
   }, [currentOrg])
 
@@ -57,6 +59,17 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!currentOrg) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-lg font-semibold mb-2">No Organization Selected</p>
+          <p className="text-muted-foreground">Please create or select an organization to continue</p>
+        </div>
       </div>
     )
   }

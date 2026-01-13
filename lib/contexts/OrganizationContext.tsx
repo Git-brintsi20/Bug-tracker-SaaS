@@ -68,7 +68,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const fetchOrganizations = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('accessToken')
       
       if (!token) {
         setIsLoading(false)
