@@ -13,7 +13,7 @@
 
 <!-- Tech Stack Badges -->
 <p>
-  <img src="https://img.shields.io/badge/Next.js-14.x-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js"/>
+  <img src="https://img.shields.io/badge/Next.js-16.0-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js"/>
   <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
   <img src="https://img.shields.io/badge/PostgreSQL-16+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
   <img src="https://img.shields.io/badge/Redis-7.2+-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"/>
@@ -599,56 +599,147 @@ bug-tracker-saas/
 Before you begin, ensure you have:
 
 - **Node.js** 18.0 or higher ([Download](https://nodejs.org/))
+- **pnpm** 9.0+ (recommended) or npm ([Install pnpm](https://pnpm.io/installation))
 - **Docker and Docker Compose** ([Download](https://www.docker.com/))
 - **PostgreSQL** 16+ (or use Docker)
 - **Redis** 7.2+ (or use Docker)
 - **Git** for version control
 
-### 🐳 Quick Start with Docker (Recommended)
+### 🐳 Quick Start (Recommended)
 
-> ⚡ **Fastest way to get started!**
+> ⚡ **Fastest way to get started - 5 minutes!**
 
 #### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/Git-brintsi20/bug-tracker-saas.git
+git clone https://github.com/your-username/bug-tracker-saas.git
 cd bug-tracker-saas
 ```
 
-#### 2️⃣ Configure Environment Variables
+#### 2️⃣ Install Dependencies
 
 ```bash
-# Copy environment templates
-cp .env.example .env
-cp client/.env.local.example client/.env.local
+# Install frontend dependencies
+pnpm install
+
+# Install backend service dependencies
+cd services/auth-service && npm install && cd ../..
+cd services/bug-service && npm install && cd ../..
+cd services/notification-service && npm install && cd ../..
 ```
 
-#### 3️⃣ Start All Services
+#### 3️⃣ Start Docker Containers
 
 ```bash
-# Build and start all microservices + databases
-docker-compose up --build
+# Start PostgreSQL and Redis
+docker compose up -d postgres redis
+
+# Verify containers are running
+docker ps
 ```
 
-#### 4️⃣ Run Database Migrations
+#### 4️⃣ Configure Environment Variables
+
+Create `.env` files for each service:
+
+**services/auth-service/.env:**
+```bash
+PORT=5001
+DATABASE_URL="postgresql://postgres:password@localhost:5433/bugtracker"
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRES_IN=7d
+REFRESH_TOKEN_SECRET=your-refresh-token-secret
+REFRESH_TOKEN_EXPIRES_IN=30d
+```
+
+**services/bug-service/.env:**
+```bash
+PORT=5002
+DATABASE_URL="postgresql://postgres:password@localhost:5433/bugtracker"
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+AUTH_SERVICE_URL=http://localhost:5001
+NOTIFICATION_SERVICE_URL=http://localhost:5003
+```
+
+**services/notification-service/.env:**
+```bash
+PORT=5003
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+AUTH_SERVICE_URL=http://localhost:5001
+BUG_SERVICE_URL=http://localhost:5002
+```
+
+**Root .env.local:**
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:5001/api
+NEXT_PUBLIC_BUG_API_URL=http://localhost:5002/api
+NEXT_PUBLIC_WS_URL=http://localhost:5003
+```
+
+#### 5️⃣ Run Database Migrations
 
 ```bash
-# In a new terminal
-docker-compose exec bug-service npx prisma migrate deploy
-docker-compose exec bug-service npx prisma db seed
+# Navigate to prisma directory
+cd prisma
+
+# Generate Prisma Client
+npx prisma generate
+
+# Run migrations
+npx prisma migrate deploy
+
+# Optional: Seed the database
+node seed.js
+
+cd ..
 ```
 
-#### 5️⃣ Access the Application
+#### 6️⃣ Start Backend Services
+
+Open **3 separate terminals** and run:
+
+**Terminal 1 - Auth Service:**
+```bash
+cd services/auth-service
+npm run dev
+# Should see: 🚀 Auth Service running on port 5001
+```
+
+**Terminal 2 - Bug Service:**
+```bash
+cd services/bug-service
+npm run dev
+# Should see: 🚀 Bug Service running on port 5002
+```
+
+**Terminal 3 - Notification Service:**
+```bash
+cd services/notification-service
+npm run dev
+# Should see: 🚀 Notification Service running on port 5003
+```
+
+#### 7️⃣ Start Frontend
+
+**Terminal 4 - Next.js Frontend:**
+```bash
+pnpm dev
+# Should see: ▲ Next.js 16.0.10 - Local: http://localhost:3000
+```
+
+#### 8️⃣ Access the Application
 
 <div align="center">
 
-| Service | URL | Description |
+| Service | URL | Status Check |
 |---------|-----|-------------|
 | 🌐 Frontend | http://localhost:3000 | Main application |
-| 🔐 Auth Service | http://localhost:5001 | Authentication API |
-| 🐛 Bug Service | http://localhost:5002 | Bug management API |
-| 📢 Notification Service | http://localhost:5003 | WebSocket server |
-| 🗄️ PostgreSQL | localhost:5432 | Database |
+| 🔐 Auth Service | http://localhost:5001 | http://localhost:5001/api/health |
+| 🐛 Bug Service | http://localhost:5002 | http://localhost:5002/api/health |
+| 📢 Notification Service | http://localhost:5003 | http://localhost:5003/health |
+| 🗄️ PostgreSQL | localhost:5433 | Database |
 | ⚡ Redis | localhost:6379 | Cache server |
 
 </div>
@@ -663,91 +754,61 @@ docker-compose exec bug-service npx prisma db seed
 
 <br>
 
+### 🔍 Verify Installation
+
+Check if all services are running:
+
+```powershell
+# Windows PowerShell
+Write-Host "Testing Auth Service (5001)..."; 
+try { Invoke-WebRequest -Uri "http://localhost:5001/api/health" -TimeoutSec 2 } catch { "❌ Not Running" }
+
+Write-Host "Testing Bug Service (5002)..."; 
+try { Invoke-WebRequest -Uri "http://localhost:5002/api/health" -TimeoutSec 2 } catch { "❌ Not Running" }
+
+Write-Host "Testing Notification Service (5003)..."; 
+try { Invoke-WebRequest -Uri "http://localhost:5003/health" -TimeoutSec 2 } catch { "❌ Not Running" }
+```
+
+```bash
+# Linux/Mac
+curl http://localhost:5001/api/health
+curl http://localhost:5002/api/health
+curl http://localhost:5003/health
+```
+
+### 🐛 Troubleshooting
+
+**Problem: Database connection error**
+```bash
+# Make sure PostgreSQL container is running
+docker ps | grep bugtracker-postgres
+
+# Restart if needed
+docker start bugtracker-postgres
+```
+
+**Problem: Frontend stuck loading**
+```bash
+# Check if all backend services are running
+# Make sure you have 3 terminals running the services
+# Verify .env files are correctly configured
+```
+
+**Problem: Cannot create organization**
+```bash
+# Make sure you're logged in
+# Check browser console (F12) for errors
+# Verify Auth Service is accessible
+```
+
+**Problem: Real-time updates not working**
+```bash
+# Check Notification Service is running on port 5003
+# Verify WebSocket connection in browser DevTools > Network > WS
+```
+
 ---
-
-### ⚙️ Manual Setup (Alternative)
-
-> 🔧 **For developers who prefer manual configuration**
-
-#### 📦 Step 1: Setup PostgreSQL Database
-
-```bash
-# Create database
-createdb bugtracker
-
-# Or use Docker
-docker run --name postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=bugtracker \
-  -p 5432:5432 \
-  -d postgres:16
-```
-
-#### 📦 Step 2: Setup Redis
-
-```bash
-# Install Redis locally or use Docker
-docker run --name redis \
-  -p 6379:6379 \
-  -d redis:7.2-alpine
-```
-
-#### 📦 Step 3: Setup Auth Service
-
-```bash
-cd services/auth-service
-npm install
-
-# Configure .env
-cat > .env << EOF
-PORT=5001
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/bugtracker"
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_EXPIRES_IN=7d
-REFRESH_TOKEN_SECRET=your-refresh-token-secret
-REFRESH_TOKEN_EXPIRES_IN=30d
-
-# OAuth (optional)
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-secret
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-secret
-OAUTH_CALLBACK_URL=http://localhost:3000/oauth/callback
-EOF
-
-# Generate Prisma client
-npx prisma generate
-
-# Run migrations
-npx prisma migrate deploy
-
-# Start service
-npm run dev
-```
-
-#### 📦 Step 4: Setup Bug Service
-
-```bash
-cd services/bug-service
-npm install
-
-# Configure .env
-cat > .env << EOF
-PORT=5002
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/bugtracker"
-REDIS_URL=redis://localhost:6379
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-AUTH_SERVICE_URL=http://localhost:5001
-NOTIFICATION_SERVICE_URL=http://localhost:5003
-EOF
-
-# Start service
-npm run dev
-```
-
-#### 📦 Step 5: Setup Notification Service
-
-```bash
 cd services/notification-service
 npm install
 

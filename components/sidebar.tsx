@@ -79,7 +79,7 @@ export function Sidebar() {
         {/* Header */}
         <div className="p-6 border-b border-border">
           <Link href="/" className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-accent flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -164,7 +164,7 @@ export function Sidebar() {
             href="/dashboard/profile"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent" />
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-accent" />
             <div className="flex-1 text-left">
               <p className="font-medium text-foreground text-sm">Profile</p>
               <p className="text-xs text-muted-foreground">Your account</p>
