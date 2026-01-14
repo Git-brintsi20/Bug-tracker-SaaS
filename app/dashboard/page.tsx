@@ -253,7 +253,7 @@ export default function DashboardPage() {
                 {stats.bugsByAssignee.slice(0, 5).map((item, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
+                      <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
                         {item.assignee?.firstName?.charAt(0) || '?'}
                       </div>
                       <span className="text-sm text-foreground">

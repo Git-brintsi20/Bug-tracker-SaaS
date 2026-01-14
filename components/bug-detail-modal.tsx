@@ -177,7 +177,7 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-2">Created By</label>
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
+                          <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
                             {bug.bug.creator?.firstName?.charAt(0) || "U"}
                           </div>
                           <span className="text-foreground">
@@ -190,7 +190,7 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
                         <label className="block text-sm font-medium text-muted-foreground mb-2">Assigned To</label>
                         {bug.bug.assignee ? (
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
+                            <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold">
                               {bug.bug.assignee.firstName?.charAt(0)}
                             </div>
                             <span className="text-foreground">
@@ -256,7 +256,7 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
                   <div className="space-y-4">
                     {comments.map((comment: any) => (
                       <div key={comment.id} className="flex gap-3 p-4 bg-muted/30 rounded-lg">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white font-bold shrink-0">
                           {comment.author?.firstName?.charAt(0) || "U"}
                         </div>
                         <div className="flex-1">

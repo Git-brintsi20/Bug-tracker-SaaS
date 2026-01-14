@@ -72,7 +72,7 @@ export function CreateBugModal({ isOpen, onClose, onSuccess }: CreateBugModalPro
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {createBug.isError && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
-                <AlertCircle size={20} className="text-destructive flex-shrink-0 mt-0.5" />
+                <AlertCircle size={20} className="text-destructive shrink-0 mt-0.5" />
                 <p className="text-sm text-destructive">
                   {(createBug.error as any)?.response?.data?.message || "Failed to create bug"}
                 </p>
