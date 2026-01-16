@@ -171,7 +171,7 @@ export default function ProfilePage() {
             className="p-6 rounded-lg border border-border bg-card"
           >
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-2xl font-bold">
+              <div className="w-16 h-16 rounded-lg bg-linear-to-br from-primary to-accent flex items-center justify-center text-white text-2xl font-bold">
                 {initials}
               </div>
               <div>

@@ -1,9 +1,17 @@
-"use client"
-
-import { motion } from "framer-motion"
-import { Bell, Shield, Database, Users, Code, AlertCircle } from "lucide-react"
+import { Suspense } from "react"
+import { SettingsPageContent } from "@/components/settings-page-content"
 
 export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <SettingsPageContent />
+    </Suspense>
+  )
+}
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}

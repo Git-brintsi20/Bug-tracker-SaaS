@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, LayoutGrid, FileText, Users, Settings, Menu, X, LogOut } from "lucide-react"
+import { ChevronDown, LayoutGrid, FileText, Users, Settings, Menu, X, LogOut, Tag } from "lucide-react"
 import { OrganizationSelector } from "@/components/organization-selector"
 
 export function Sidebar() {
@@ -46,6 +46,12 @@ export function Sidebar() {
       href: "/dashboard/team",
       icon: <Users size={20} />,
       badge: "5",
+    },
+    {
+      label: "Labels",
+      href: "/dashboard/labels",
+      icon: <Tag size={20} />,
+      badge: null,
     },
     {
       label: "Settings",

@@ -211,7 +211,7 @@ export function TeamPageContent() {
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-lg font-bold">
+                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white text-lg font-bold">
                           {member.user.firstName.charAt(0)}{member.user.lastName.charAt(0)}
                         </div>
                         <div>
