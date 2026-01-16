@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, MessageSquare, Paperclip, Send, Clock, Loader2 } from "lucide-react"
+import { X, MessageSquare, Paperclip, Send, Clock, Loader2, Upload, Download, Trash2 } from "lucide-react"
 import { useBug, useComments, useCreateComment } from "@/hooks/useBugs"
+import { attachments as attachmentsApi } from "@/lib/api"
 import { formatDistanceToNow } from "date-fns"
 
 interface BugDetailModalProps {
@@ -15,11 +16,77 @@ interface BugDetailModalProps {
 export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) {
   const [activeTab, setActiveTab] = useState<"details" | "comments" | "attachments">("details")
   const [newComment, setNewComment] = useState("")
+  const [attachments, setAttachments] = useState<any[]>([])
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: bug, isLoading: loadingBug } = useBug(isOpen ? bugId : null)
   const { data: commentsData, isLoading: loadingComments } = useComments(isOpen ? bugId : null)
   const createComment = useCreateComment()
+// Fetch attachments when modal opens
+  useState(() => {
+    if (isOpen && bugId) {
+      fetchAttachments()
+    }
+  })
 
+  const fetchAttachments = async () => {
+    if (!bugId) return
+    try {
+      const response = await attachmentsApi.getAll(bugId)
+      setAttachments(response.data)
+    } catch (error) {
+      console.error('Failed to fetch attachments:', error)
+    }
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !bugId) return
+
+    const file = e.target.files[0]
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      setUploading(true)
+      await attachmentsApi.upload(bugId, formData)
+      fetchAttachments()
+    } catch (error) {
+      console.error('Failed to upload file:', error)
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleDownload = async (attachmentId: string, filename: string) => {
+    if (!bugId) return
+    try {
+      const response = await attachmentsApi.download(bugId, attachmentId)
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', filename)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to download file:', error)
+    }
+  }
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (!bugId || !confirm('Are you sure you want to delete this attachment?')) return
+    try {
+      await attachmentsApi.delete(bugId, attachmentId)
+      fetchAttachments()
+    } catch (error) {
+      console.error('Failed to delete attachment:', error)
+    }
+  }
+
+  
   const comments = commentsData?.comments || []
 
   const handleSendComment = async (e: React.FormEvent) => {
@@ -245,10 +312,79 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
               <div className="space-y-4">
                 {loadingComments ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <Loader2 cspace-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-foreground">Attachments</h3>
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 cursor-pointer transition-smooth"
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={16} />
+                          Upload File
+                        </>
+                      )}
+                    </label>
                   </div>
-                ) : comments.length === 0 ? (
+                </div>
+
+                {attachments.length === 0 ? (
                   <div className="text-center py-12">
+                    <Paperclip size={48} className="mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">No attachments yet.</p>
+                    <p className="text-sm text-muted-foreground mt-2">Upload files to share with your team</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {attachments.map((attachment: any) => (
+                      <div
+                        key={attachment.id}
+                        className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-smooth"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <Paperclip size={20} className="text-muted-foreground" />
+                          <div className="flex-1">
+                            <p className="text-foreground font-medium">{attachment.filename}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {attachment.uploader?.firstName} {attachment.uploader?.lastName} • {' '}
+                              {formatDistanceToNow(new Date(attachment.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleDownload(attachment.id, attachment.filename)}
+                            className="p-2 hover:bg-muted rounded transition-smooth"
+                            title="Download"
+                          >
+                            <Download size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAttachment(attachment.id)}
+                            className="p-2 hover:bg-destructive/10 text-destructive rounded transition-smooth"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                     <MessageSquare size={48} className="mx-auto text-muted-foreground mb-3" />
                     <p className="text-muted-foreground">No comments yet. Be the first to comment!</p>
                   </div>

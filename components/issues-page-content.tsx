@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { IssueTable } from "@/components/issue-table"
-import { Search, Filter, Plus, Download } from "lucide-react"
-import { bugApi } from "@/lib/api"
+import { Search, Filter, Plus, Download, X, CheckSquare } from "lucide-react"
+import { bugApi, exports, bulk } from "@/lib/api"
 import { useOrganization } from "@/lib/contexts/OrganizationContext"
 import { CreateBugModal } from "@/components/create-bug-modal"
 import { EditBugModal } from "@/components/edit-bug-modal"
@@ -34,6 +34,8 @@ export function IssuesPageContent() {
     dateTo: "",
     labels: []
   })
+  const [bulkMode, setBulkMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   useEffect(() => {
     if (currentOrg) {
@@ -167,6 +169,71 @@ export function IssuesPageContent() {
     setStatusFilter(null) // Clear simple status filter when using advanced
   }
 
+  const handleExport = async (format: 'csv' | 'pdf') => {
+    if (!currentOrg) return
+
+    try {
+      const params: any = {}
+      if (advancedFilters.status.length > 0) params.status = advancedFilters.status.join(',')
+      if (advancedFilters.priority.length > 0) params.priority = advancedFilters.priority.join(',')
+      if (advancedFilters.assignee) params.assignee = advancedFilters.assignee
+      if (advancedFilters.dateFrom) params.dateFrom = advancedFilters.dateFrom
+      if (advancedFilters.dateTo) params.dateTo = advancedFilters.dateTo
+
+      const response = format === 'csv' 
+        ? await exports.csv(currentOrg.id, params)
+        : await exports.pdf(currentOrg.id, params)
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `bugs-${new Date().toISOString().split('T')[0]}.${format}`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Export failed:', error)
+    }
+  }handleBulkStatusUpdate = async (status: string) => {
+    if (!currentOrg || selectedIds.length === 0) return
+    try {
+      await bulk.updateStatus(currentOrg.id, { bugIds: selectedIds, status })
+      fetchIssues()
+      setSelectedIds([])
+      setBulkMode(false)
+    } catch (error) {
+      console.error('Bulk update failed:', error)
+    }
+  }
+
+  const handleBulkPriorityUpdate = async (priority: string) => {
+    if (!currentOrg || selectedIds.length === 0) return
+    try {
+      await bulk.updatePriority(currentOrg.id, { bugIds: selectedIds, priority })
+      fetchIssues()
+      setSelectedIds([])
+      setBulkMode(false)
+    } catch (error) {
+      console.error('Bulk update failed:', error)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (!currentOrg || selectedIds.length === 0 || !confirm(`Delete ${selectedIds.length} issues?`)) return
+    try {
+      await bulk.delete(currentOrg.id, { bugIds: selectedIds })
+      fetchIssues()
+      setSelectedIds([])
+      setBulkMode(false)
+    } catch (error) {
+      console.error('Bulk delete failed:', error)
+    }
+  }
+
+  const 
+
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
       issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -188,10 +255,47 @@ export function IssuesPageContent() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth"
+                onClick={() => {
+                  setBulkMode(!bulkMode)
+                  setSelectedIds([])
+                }}
+                className={`flex items-center gap-2 px-4 py-2 border border-border rounded-lg transition-smooth ${bulkMode ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'}`}
               >
-                <Download size={18} /> Export
+                <CheckSquare size={18} /> {bulkMode ? 'Exit Bulk Mode' : 'Bulk Actions'}
               </motion.button>
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    const menu = document.getElementById('export-menu')
+                    if (menu) menu.classList.toggle('hidden')
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth"
+                >
+                  <Download size={18} /> Export
+                </motion.button>
+                <div id="export-menu" className="hidden absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50">
+                  <button
+                    onClick={() => {
+                      handleExport('csv')
+                      document.getElementById('export-menu')?.classList.add('hidden')
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-muted transition-smooth rounded-t-lg"
+                  >
+                    Export as CSV
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleExport('pdf')
+                      document.getElementById('export-menu')?.classList.add('hidden')
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-muted transition-smooth rounded-b-lg"
+                  >
+                    Export as PDF
+                  </button>
+                </div>
+              </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -245,6 +349,71 @@ export function IssuesPageContent() {
               <span className="font-semibold text-foreground">{filteredIssues.length}</span>
             </div>
           </div>
+
+          {/* Bulk Actions Toolbar */}
+          {bulkMode && selectedIds.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-4 bg-card border border-border rounded-lg flex items-center justify-between"
+            >
+              <div className="text-sm text-muted-foreground">
+                {selectedIds.length} issue{selectedIds.length > 1 ? 's' : ''} selected
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <button
+                    onClick={() => document.getElementById('status-menu')?.classList.toggle('hidden')}
+                    className="px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-muted transition-smooth"
+                  >
+                    Update Status
+                  </button>
+                  <div id="status-menu" className="hidden absolute left-0 mt-2 w-40 bg-card border border-border rounded-lg shadow-lg z-50">
+                    {['open', 'in-progress', 'review', 'closed'].map(status => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          handleBulkStatusUpdate(status)
+                          document.getElementById('status-menu')?.classList.add('hidden')
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-muted transition-smooth first:rounded-t-lg last:rounded-b-lg capitalize"
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative">
+                  <button
+                    onClick={() => document.getElementById('priority-menu')?.classList.toggle('hidden')}
+                    className="px-3 py-1.5 text-sm border border-border rounded-lg hover:bg-muted transition-smooth"
+                  >
+                    Update Priority
+                  </button>
+                  <div id="priority-menu" className="hidden absolute left-0 mt-2 w-40 bg-card border border-border rounded-lg shadow-lg z-50">
+                    {['low', 'medium', 'high', 'critical'].map(priority => (
+                      <button
+                        key={priority}
+                        onClick={() => {
+                          handleBulkPriorityUpdate(priority)
+                          document.getElementById('priority-menu')?.classList.add('hidden')
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-muted transition-smooth first:rounded-t-lg last:rounded-b-lg capitalize"
+                      >
+                        {priority}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={handleBulkDelete}
+                  className="px-3 py-1.5 text-sm bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-smooth"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -256,7 +425,15 @@ export function IssuesPageContent() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : filteredIssues.length > 0 ? (
-            <IssueTable issues={filteredIssues} onRowClick={handleRowClick} onEdit={handleEdit} onDelete={handleDelete} />
+            <IssueTable 
+              issues={filteredIssues} 
+              onRowClick={handleRowClick} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete}
+              bulkMode={bulkMode}
+              selectedIds={selectedIds}
+              onSelectChange={setSelectedIds}
+            />
           ) : (
             <div className="flex items-center justify-center py-12 rounded-lg border border-dashed border-border">
               <div className="text-center">

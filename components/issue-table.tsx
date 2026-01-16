@@ -18,6 +18,9 @@ interface IssueTableProps {
   onRowClick?: (issue: Issue) => void
   onEdit?: (issue: Issue) => void
   onDelete?: (issue: Issue) => void
+  selectedIds?: string[]
+  onSelectChange?: (ids: string[]) => void
+  bulkMode?: boolean
 }
 
 const statusConfig = {
@@ -34,25 +37,68 @@ const priorityConfig = {
   low: { label: "Low", color: "text-blue-500" },
 }
 
-export function IssueTable({ issues, onRowClick, onEdit, onDelete }: IssueTableProps) {
+export function IssueTable({ issues, onRowClick, onEdit, onDelete, selectedIds = [], onSelectChange, bulkMode = false }: IssueTableProps) {
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      onSelectChange?.(issues.map(i => i.id))
+    } else {
+      onSelectChange?.([])
+    }
+  }
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      onSelectChange?.([...selectedIds, id])
+    } else {
+      onSelectChange?.(selectedIds.filter(i => i !== id))
+    }
+  }
+
+  const allSelected = issues.length > 0 && selectedIds.length === issues.length
+
   return (
     <div className="rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-background/50">
+              {bulkMode && (
+                <th className="px-6 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-border"
+                  />
+                </th>
+              )}
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">ID</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">Title</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">Status</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">Priority</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">Assignee</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-muted-foreground">Updated</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-muted-foreground">Actions</th>
+              {!bulkMode && (
+                <th className="px-6 py-3 text-right text-sm font-semibold text-muted-foreground">Actions</th>
+              )}
             </tr>
           </thead>
-          <tbody>
-            {issues.map((issue, index) => {
-              const statusConfig_ = statusConfig[issue.status]
+          <tbody>!bulkMode && onRowClick?.(issue)}
+                  className={`border-b border-border hover:bg-muted/50 transition-smooth group ${
+                    bulkMode ? '' : 'cursor-pointer'
+                  }`}
+                >
+                  {bulkMode && (
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(issue.id)}
+                        onChange={(e) => handleSelectOne(issue.id, e.target.checked)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-4 h-4 rounded border-border"
+                      />
+                    </td>
+                  )}st statusConfig_ = statusConfig[issue.status]
               const priorityConfig_ = priorityConfig[issue.priority]
               const StatusIcon = statusConfig_.icon
 
@@ -83,7 +129,7 @@ export function IssueTable({ issues, onRowClick, onEdit, onDelete }: IssueTableP
                   <td className="px-6 py-4">
                     {issue.assignee ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold">
+                        <div className="w-6 h-6 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white text-xs font-bold">
                           {issue.assignee.charAt(0).toUpperCase()}
                         </div>
                         <span className="text-sm text-foreground">{issue.assignee}</span>
@@ -93,34 +139,36 @@ export function IssueTable({ issues, onRowClick, onEdit, onDelete }: IssueTableP
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{issue.updated}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      {onEdit && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onEdit(issue)
-                          }}
-                          className="p-2 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-smooth"
-                          title="Edit bug"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onDelete(issue)
-                          }}
-                          className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-smooth"
-                          title="Delete bug"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                  {!bulkMode && (
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        {onEdit && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onEdit(issue)
+                            }}
+                            className="p-2 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-smooth"
+                            title="Edit bug"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onDelete(issue)
+                            }}
+                            className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-smooth"
+                            title="Delete bug"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </motion.tr>
               )
             })}
