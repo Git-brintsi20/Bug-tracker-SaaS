@@ -232,8 +232,6 @@ export function IssuesPageContent() {
     }
   }
 
-  const 
-
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch =
       issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
