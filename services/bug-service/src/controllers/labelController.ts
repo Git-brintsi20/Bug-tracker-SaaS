@@ -100,7 +100,7 @@ export const createLabel = async (req: Request, res: Response): Promise<void> =>
 // Update a label
 export const updateLabel = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { labelId } = req.params
+    const { labelId, organizationId } = req.params
     const { name, color } = req.body
 
     // Check if label exists
@@ -117,6 +117,12 @@ export const updateLabel = async (req: Request, res: Response): Promise<void> =>
 
     if (!existingLabel) {
       res.status(404).json({ error: 'Label not found' })
+      return
+    }
+
+    // Verify organization ownership
+    if (existingLabel.bug.organizationId !== organizationId) {
+      res.status(403).json({ error: 'Label does not belong to this organization' })
       return
     }
 
@@ -162,7 +168,7 @@ export const updateLabel = async (req: Request, res: Response): Promise<void> =>
 // Delete a label
 export const deleteLabel = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { labelId } = req.params
+    const { labelId, organizationId } = req.params
 
     // Check if label exists
     const existingLabel = await prisma.label.findUnique({
@@ -178,6 +184,12 @@ export const deleteLabel = async (req: Request, res: Response): Promise<void> =>
 
     if (!existingLabel) {
       res.status(404).json({ error: 'Label not found' })
+      return
+    }
+
+    // Verify organization ownership
+    if (existingLabel.bug.organizationId !== organizationId) {
+      res.status(403).json({ error: 'Label does not belong to this organization' })
       return
     }
 

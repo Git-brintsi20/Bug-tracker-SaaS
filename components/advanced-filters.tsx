@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Calendar, User, Tag, Save, Trash2, Search } from "lucide-react"
 import { useOrganization } from "@/lib/contexts/OrganizationContext"
-import { api } from "@/lib/api"
+import { organizations, labels } from "@/lib/api"
 
 interface AdvancedFiltersProps {
   isOpen: boolean
@@ -62,7 +62,7 @@ export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: Ad
   const fetchMembers = async () => {
     if (!currentOrganization) return
     try {
-      const response = await api.organizations.getMembers(currentOrganization.id)
+      const response = await organizations.getMembers(currentOrganization.id)
       setMembers(response.data)
     } catch (error) {
       console.error('Failed to fetch members:', error)
@@ -72,7 +72,7 @@ export function AdvancedFilters({ isOpen, onClose, onApply, currentFilters }: Ad
   const fetchLabels = async () => {
     if (!currentOrganization) return
     try {
-      const response = await api.labels.getLabels(currentOrganization.id)
+      const response = await labels.getLabels(currentOrganization.id)
       setLabels(response.data)
     } catch (error) {
       console.error('Failed to fetch labels:', error)

@@ -83,7 +83,19 @@ export function IssueTable({ issues, onRowClick, onEdit, onDelete, selectedIds =
               )}
             </tr>
           </thead>
-          <tbody>!bulkMode && onRowClick?.(issue)}
+          <tbody>
+            {issues.map((issue, index) => {
+              const statusConfig_ = statusConfig[issue.status]
+              const priorityConfig_ = priorityConfig[issue.priority]
+              const StatusIcon = statusConfig_.icon
+
+              return (
+                <motion.tr
+                  key={issue.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => !bulkMode && onRowClick?.(issue)}
                   className={`border-b border-border hover:bg-muted/50 transition-smooth group ${
                     bulkMode ? '' : 'cursor-pointer'
                   }`}
@@ -98,19 +110,7 @@ export function IssueTable({ issues, onRowClick, onEdit, onDelete, selectedIds =
                         className="w-4 h-4 rounded border-border"
                       />
                     </td>
-                  )}st statusConfig_ = statusConfig[issue.status]
-              const priorityConfig_ = priorityConfig[issue.priority]
-              const StatusIcon = statusConfig_.icon
-
-              return (
-                <motion.tr
-                  key={issue.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  onClick={() => onRowClick?.(issue)}
-                  className="border-b border-border hover:bg-muted/50 transition-smooth cursor-pointer group"
-                >
+                  )}
                   <td className="px-6 py-4 text-sm font-mono text-primary">{issue.id}</td>
                   <td className="px-6 py-4 text-sm font-medium text-foreground group-hover:text-primary transition-smooth">
                     {issue.title}

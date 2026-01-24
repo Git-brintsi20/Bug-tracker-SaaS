@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Cost Breakdown</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #1F3B7C 0%, #1F3B7C 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.05em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        th:first-child {
+            border-top-left-radius: 12px;
+            text-align: center;
+        }
+        
+        th:last-child {
+            border-top-right-radius: 12px;
+            text-align: right;
+        }
+        
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        tbody tr:hover {
+            background: #f9fafb;
+            transform: scale(1.01);
+        }
+        
+        td {
+            padding: 16px 15px;
+            color: #374151;
+            font-size: 0.95em;
+        }
+        
+        td:first-child {
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1em;
+        }
+        
+        td:nth-child(3) {
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        td:last-child {
+            text-align: right;
+            font-weight: 600;
+            color: #059669;
+            font-size: 1em;
+        }
+        
+        .total-row {
+            background: linear-gradient(135deg, #C85341 0%, #C85341 100%);
+            font-weight: 700;
+            font-size: 1.1em;
+            border: none;
+        }
+        
+        .total-row td {
+            color: white;
+            padding: 20px 15px;
+            border: none;
+        }
+        
+        .total-row td:first-child {
+            border-bottom-left-radius: 12px;
+            color: white;
+        }
+        
+        .total-row td:last-child {
+            border-bottom-right-radius: 12px;
+            font-size: 1.3em;
+            color: white;
+        }
+        
+        .rupee {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 20px;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            
+            tbody tr:hover {
+                transform: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.6em;
+            }
+            
+            th, td {
+                padding: 12px 8px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bill of Materials</h1>
+        <div class="subtitle">Project Component Cost Breakdown</div>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>S. No.</th>
+                        <th>Component Name</th>
+                        <th>Quantity</th>
+                        <th>Cost (<span class="rupee">₹</span>)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Rechargeable Battery</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>287</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Battery Charging Board</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>13</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>ESP WROOM 32 MCU</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>429</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Digital Temperature Sensor</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>173</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Piezo Electronic Buzzer</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>65</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Display Module</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>179</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>PCB Board</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>92</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Peltier Module</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>203</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Heat Sink</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>440</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Female Barrel Jack</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>133</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>60W Power Adaptor</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>517</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Ice Gel Packs</td>
+                        <td>4</td>
+                        <td><span class="rupee">₹</span>168</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>18 AWG Silicone Wire</td>
+                        <td>2</td>
+                        <td><span class="rupee">₹</span>55</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>Aluminium Alloy Sheet</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>75</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>PU foam sheet</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>30</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>ABS plastic sheet</td>
+                        <td>1</td>
+                        <td><span class="rupee">₹</span>649</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="3">TOTAL</td>
+                        <td><span class="rupee">₹</span>3,425</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

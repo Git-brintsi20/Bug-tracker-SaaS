@@ -312,7 +312,57 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
               <div className="space-y-4">
                 {loadingComments ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 cspace-y-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : comments.length > 0 ? (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="p-4 rounded-lg border border-border bg-muted/30">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-sm font-medium text-primary">
+                              {comment.author.username[0].toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{comment.author.username}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-foreground whitespace-pre-wrap">{comment.content}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No comments yet
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-border">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="w-full px-4 py-3 bg-input border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-[100px]"
+                  />
+                  <div className="flex justify-end mt-3">
+                    <button
+                      onClick={handleSendComment}
+                      disabled={!newComment.trim() || createComment.isPending}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
+                    >
+                      {createComment.isPending ? 'Adding...' : 'Add Comment'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "attachments" && (
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-foreground">Attachments</h3>
                   <div>
@@ -385,72 +435,6 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
                     ))}
                   </div>
                 )}
-                    <MessageSquare size={48} className="mx-auto text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground">No comments yet. Be the first to comment!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {comments.map((comment: any) => (
-                      <div key={comment.id} className="flex gap-3 p-4 bg-muted/30 rounded-lg">
-                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center text-white font-bold shrink-0">
-                          {comment.author?.firstName?.charAt(0) || "U"}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-foreground">
-                              {comment.author?.firstName} {comment.author?.lastName}
-                            </span>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock size={12} />
-                              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                            </span>
-                          </div>
-                          <p className="text-foreground whitespace-pre-wrap">{comment.content}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Add Comment */}
-                <form onSubmit={handleSendComment} className="sticky bottom-0 pt-4 border-t border-border bg-card">
-                  <div className="flex gap-3">
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Write a comment..."
-                      className="flex-1 px-4 py-2.5 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-smooth resize-none"
-                      rows={3}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                          handleSendComment(e)
-                        }
-                      }}
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newComment.trim() || createComment.isPending}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-smooth flex items-center gap-2 h-fit"
-                    >
-                      {createComment.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Send size={16} />
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">Enter</kbd> to send
-                  </p>
-                </form>
-              </div>
-            )}
-
-            {activeTab === "attachments" && (
-              <div className="text-center py-12">
-                <Paperclip size={48} className="mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No attachments yet.</p>
-                <p className="text-sm text-muted-foreground mt-2">Attachment feature coming soon!</p>
               </div>
             )}
           </div>
@@ -459,3 +443,4 @@ export function BugDetailModal({ isOpen, onClose, bugId }: BugDetailModalProps) 
     </AnimatePresence>
   )
 }
+

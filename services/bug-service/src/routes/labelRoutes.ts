@@ -17,8 +17,8 @@ router.use(authenticate)
 // Label management routes
 router.get('/organizations/:organizationId/labels', getLabels)
 router.post('/organizations/:organizationId/labels', createLabel)
-router.put('/labels/:labelId', updateLabel)
-router.delete('/labels/:labelId', deleteLabel)
+router.put('/organizations/:organizationId/labels/:labelId', updateLabel)
+router.delete('/organizations/:organizationId/labels/:labelId', deleteLabel)
 
 // Bug-label association routes
 router.post('/bugs/:bugId/labels/:labelId', addLabelToBug)

@@ -196,10 +196,14 @@ export function IssuesPageContent() {
     } catch (error) {
       console.error('Export failed:', error)
     }
-  }handleBulkStatusUpdate = async (status: string) => {
+  }
+
+  const handleBulkStatusUpdate = async (status: string) => {
     if (!currentOrg || selectedIds.length === 0) return
     try {
-      await bulk.updateStatus(currentOrg.id, { bugIds: selectedIds, status })
+      // Convert to uppercase for backend
+      const upperStatus = status.toUpperCase().replace('-', '_')
+      await bulk.updateStatus(currentOrg.id, { bugIds: selectedIds, status: upperStatus })
       fetchIssues()
       setSelectedIds([])
       setBulkMode(false)
@@ -211,7 +215,9 @@ export function IssuesPageContent() {
   const handleBulkPriorityUpdate = async (priority: string) => {
     if (!currentOrg || selectedIds.length === 0) return
     try {
-      await bulk.updatePriority(currentOrg.id, { bugIds: selectedIds, priority })
+      // Convert to uppercase for backend
+      const upperPriority = priority.toUpperCase()
+      await bulk.updatePriority(currentOrg.id, { bugIds: selectedIds, priority: upperPriority })
       fetchIssues()
       setSelectedIds([])
       setBulkMode(false)
@@ -324,8 +330,9 @@ export function IssuesPageContent() {
             >
               <option value="">All Status</option>
               <option value="open">Open</option>
-              <option value="in-progress">In Progress</option>
-              <option value="review">Review</option>
+              <option value="in_progress">In Progress</option>
+              <option value="in_review">In Review</option>
+              <option value="resolved">Resolved</option>
               <option value="closed">Closed</option>
             </select>
             <button 
@@ -367,7 +374,7 @@ export function IssuesPageContent() {
                     Update Status
                   </button>
                   <div id="status-menu" className="hidden absolute left-0 mt-2 w-40 bg-card border border-border rounded-lg shadow-lg z-50">
-                    {['open', 'in-progress', 'review', 'closed'].map(status => (
+                    {['open', 'in_progress', 'in_review', 'resolved', 'closed'].map(status => (
                       <button
                         key={status}
                         onClick={() => {
