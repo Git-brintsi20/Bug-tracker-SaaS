@@ -97,7 +97,7 @@ export const bulkUpdatePriority = async (req: Request, res: Response): Promise<v
     })
     const orgIds = [...new Set(bugs.map(b => b.organizationId))]
     for (const orgId of orgIds) {
-      await cacheDelete(`bugs:org:${orgId}:*`)
+      await deleteCachePattern(`bugs:org:${orgId}:*`)
     }
 
     res.json({ 
