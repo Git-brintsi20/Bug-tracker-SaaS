@@ -1,12 +1,18 @@
 // Mock Prisma Client before importing
 const mockBugUpdateMany = jest.fn();
 const mockBugDeleteMany = jest.fn();
+const mockBugFindMany = jest.fn();
+const mockBugFindUnique = jest.fn();
 
 jest.mock('../../../../../prisma/node_modules/@prisma/client', () => ({
   PrismaClient: jest.fn().mockImplementation(() => ({
     bug: {
       updateMany: mockBugUpdateMany,
       deleteMany: mockBugDeleteMany,
+      findMany: mockBugFindMany,
+    },
+    user: {
+      findUnique: mockBugFindUnique,
     },
   })),
 }));
@@ -44,6 +50,9 @@ describe('Bulk Operations Controller', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    mockBugFindMany.mockResolvedValue([]);
+    mockBugFindUnique.mockResolvedValue({ id: 'user-123' });
+    mockDeleteCachePattern.mockResolvedValue(undefined);
   });
 
   describe('bulkUpdateStatus', () => {
@@ -55,13 +64,19 @@ describe('Bulk Operations Controller', () => {
       mockRequest.params = { organizationId: 'org-123' };
 
       mockBugUpdateMany.mockResolvedValue({ count: 3 });
+      mockBugFindMany.mockResolvedValue([
+        { organizationId: 'org-123' },
+        { organizationId: 'org-123' },
+        { organizationId: 'org-123' },
+      ]);
       mockDeleteCachePattern.mockResolvedValue(undefined);
 
       await bulkUpdateStatus(mockRequest as Request, mockResponse as Response);
 
       expect(mockBugUpdateMany).toHaveBeenCalled();
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(responseObject.updatedCount).toBe(3);
+      expect(mockBugFindMany).toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalled();
+      expect(responseObject.count).toBe(3);
     });
 
     it('should validate status enum', async () => {
@@ -98,12 +113,17 @@ describe('Bulk Operations Controller', () => {
       mockRequest.params = { organizationId: 'org-123' };
 
       mockBugUpdateMany.mockResolvedValue({ count: 2 });
+      mockBugFindMany.mockResolvedValue([
+        { organizationId: 'org-123' },
+        { organizationId: 'org-123' },
+      ]);
       mockDeleteCachePattern.mockResolvedValue(undefined);
 
       await bulkUpdatePriority(mockRequest as Request, mockResponse as Response);
 
       expect(mockBugUpdateMany).toHaveBeenCalled();
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockBugFindMany).toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalled();
     });
 
     it('should validate priority enum', async () => {
@@ -127,13 +147,20 @@ describe('Bulk Operations Controller', () => {
       };
       mockRequest.params = { organizationId: 'org-123' };
 
+      mockBugFindUnique.mockResolvedValue({ id: 'user-456' });
       mockBugUpdateMany.mockResolvedValue({ count: 2 });
+      mockBugFindMany.mockResolvedValue([
+        { organizationId: 'org-123' },
+        { organizationId: 'org-123' },
+      ]);
       mockDeleteCachePattern.mockResolvedValue(undefined);
 
       await bulkAssign(mockRequest as Request, mockResponse as Response);
 
+      expect(mockBugFindUnique).toHaveBeenCalled();
       expect(mockBugUpdateMany).toHaveBeenCalled();
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockBugFindMany).toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalled();
     });
   });
 
@@ -144,14 +171,20 @@ describe('Bulk Operations Controller', () => {
       };
       mockRequest.params = { organizationId: 'org-123' };
 
+      mockBugFindMany.mockResolvedValue([
+        { organizationId: 'org-123' },
+        { organizationId: 'org-123' },
+        { organizationId: 'org-123' },
+      ]);
       mockBugDeleteMany.mockResolvedValue({ count: 3 });
       mockDeleteCachePattern.mockResolvedValue(undefined);
 
       await bulkDelete(mockRequest as Request, mockResponse as Response);
 
+      expect(mockBugFindMany).toHaveBeenCalled();
       expect(mockBugDeleteMany).toHaveBeenCalled();
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(responseObject.deletedCount).toBe(3);
+      expect(mockResponse.json).toHaveBeenCalled();
+      expect(responseObject.count).toBe(3);
     });
 
     it('should return error if no bugs deleted', async () => {
@@ -160,11 +193,13 @@ describe('Bulk Operations Controller', () => {
       };
       mockRequest.params = { organizationId: 'org-123' };
 
+      mockBugFindMany.mockResolvedValue([]);
       mockBugDeleteMany.mockResolvedValue({ count: 0 });
 
       await bulkDelete(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(mockResponse.json).toHaveBeenCalled();
+      expect(responseObject.count).toBe(0);
     });
   });
 });

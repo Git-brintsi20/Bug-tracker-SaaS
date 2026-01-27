@@ -23,11 +23,13 @@ jest.mock('../../../../../prisma/node_modules/@prisma/client', () => ({
 const mockGetCache = jest.fn();
 const mockSetCache = jest.fn();
 const mockDeleteCachePattern = jest.fn();
+const mockPublishNotification = jest.fn();
 
 jest.mock('../../utils/redis', () => ({
   getCache: mockGetCache,
   setCache: mockSetCache,
   deleteCachePattern: mockDeleteCachePattern,
+  publishNotification: mockPublishNotification,
 }));
 
 import { Request, Response } from 'express';
@@ -60,6 +62,10 @@ describe('Bug Controller', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    mockGetCache.mockResolvedValue(null);
+    mockSetCache.mockResolvedValue(undefined);
+    mockDeleteCachePattern.mockResolvedValue(undefined);
+    mockPublishNotification.mockResolvedValue(undefined);
   });
 
   describe('createBug', () => {
@@ -150,7 +156,8 @@ describe('Bug Controller', () => {
 
       await getBugs(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockBugs);
+      expect(mockSetCache).toHaveBeenCalled();
     });
 
     it('should filter bugs by status', async () => {
@@ -188,7 +195,8 @@ describe('Bug Controller', () => {
 
       await getBugById(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockBug);
+      expect(mockSetCache).toHaveBeenCalled();
     });
 
     it('should return 404 if bug not found', async () => {
@@ -223,7 +231,8 @@ describe('Bug Controller', () => {
 
       await updateBug(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith(updatedBug);
+      expect(mockDeleteCachePattern).toHaveBeenCalled();
     });
 
     it('should return 500 on error', async () => {
@@ -247,12 +256,13 @@ describe('Bug Controller', () => {
         organizationId: 'org-123',
       };
 
-      mockBugDelete.mockResolvedValue(deletedBug);
+      mockBugDelete.mockResolvedValue({ id: 'bug-123', organizationId: 'org-123' });
       mockDeleteCachePattern.mockResolvedValue(undefined);
 
       await deleteBug(mockRequest as Request, mockResponse as Response);
 
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({ message: 'Bug deleted successfully' });
+      expect(mockDeleteCachePattern).toHaveBeenCalled();
     });
 
     it('should return 500 on error', async () => {
