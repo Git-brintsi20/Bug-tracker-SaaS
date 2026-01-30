@@ -1,0 +1,21 @@
+# Auth Service Dockerfile - builds from project root
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy Prisma schema first
+COPY prisma ./prisma
+
+# Copy auth service package files
+COPY services/auth-service/package.json ./
+
+# Install dependencies using clean install
+RUN npm install --legacy-peer-deps
+
+# Copy auth service source code
+COPY services/auth-service/src ./src
+COPY services/auth-service/tsconfig.json ./
+
+EXPOSE 5001
+
+CMD ["npm", "run", "dev"]

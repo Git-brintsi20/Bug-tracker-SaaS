@@ -1,0 +1,24 @@
+# Bug Service Dockerfile - builds from project root
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy Prisma schema first
+COPY prisma ./prisma
+
+# Copy bug service package files
+COPY services/bug-service/package.json ./
+
+# Install dependencies using clean install
+RUN npm install --legacy-peer-deps
+
+# Copy bug service source code
+COPY services/bug-service/src ./src
+COPY services/bug-service/tsconfig.json ./
+
+# Create uploads directory
+RUN mkdir -p uploads
+
+EXPOSE 5002
+
+CMD ["npm", "run", "dev"]

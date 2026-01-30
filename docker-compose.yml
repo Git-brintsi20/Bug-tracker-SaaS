@@ -38,8 +38,8 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./services/auth-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.auth-service
     container_name: auth-service
     ports:
       - "5001:5001"
@@ -51,15 +51,15 @@ services:
     networks:
       - bugtracker-network
     volumes:
-      - ./services/auth-service:/app
-      - /app/node_modules
+      - ./services/auth-service/src:/app/src
+      - ./prisma:/app/prisma
     command: npm run dev
 
   # Bug Service
   bug-service:
     build:
-      context: ./services/bug-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.bug-service
     container_name: bug-service
     ports:
       - "5002:5002"
@@ -73,8 +73,8 @@ services:
     networks:
       - bugtracker-network
     volumes:
-      - ./services/bug-service:/app
-      - /app/node_modules
+      - ./services/bug-service/src:/app/src
+      - ./prisma:/app/prisma
       - uploads:/app/uploads
     command: npm run dev
 

@@ -4,10 +4,10 @@
   "description": "Authentication service for Bug Tracker SaaS",
   "main": "dist/server.js",
   "prisma": {
-    "schema": "../../prisma/schema.prisma"
+    "schema": "./prisma/schema.prisma"
   },
   "scripts": {
-    "postinstall": "prisma generate --schema=../../prisma/schema.prisma",
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
