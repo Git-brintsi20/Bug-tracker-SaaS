@@ -71,6 +71,11 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
       return
     }
 
+    if (!user.password) {
+      res.status(400).json({ error: 'Cannot change password for OAuth accounts' })
+      return
+    }
+
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
     if (!isPasswordValid) {
       res.status(400).json({ error: 'Current password is incorrect' })
