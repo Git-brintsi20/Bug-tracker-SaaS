@@ -16,9 +16,12 @@ RUN npm install --legacy-peer-deps
 COPY services/bug-service/src ./src
 COPY services/bug-service/tsconfig.json ./
 
+# Build the TypeScript code
+RUN npm run build
+
 # Create uploads directory
 RUN mkdir -p uploads
 
 EXPOSE 5002
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
