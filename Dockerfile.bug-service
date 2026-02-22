@@ -9,8 +9,11 @@ COPY prisma ./prisma
 # Copy bug service package files
 COPY services/bug-service/package.json ./
 
-# Install dependencies using clean install
-RUN npm install --legacy-peer-deps && npm install -g typescript
+# Install dependencies (skip postinstall, generate prisma client manually)
+RUN npm install --legacy-peer-deps --ignore-scripts
+
+# Generate Prisma client
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Copy bug service source code
 COPY services/bug-service/src ./src

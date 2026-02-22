@@ -1,0 +1,197 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  username      String   @unique
+  password      String?  // Null for OAuth users
+  firstName     String?
+  lastName      String?
+  avatar        String?
+  emailVerified Boolean  @default(false)
+  
+  // OAuth Fields
+  githubId      String?  @unique
+  googleId      String?  @unique
+  
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLogin     DateTime?
+  
+  // Relations
+  memberships   OrganizationMember[]
+  bugsCreated   Bug[]                @relation("BugCreator")
+  bugsAssigned  Bug[]                @relation("BugAssignee")
+  comments      Comment[]
+  
+  @@index([email])
+  @@index([username])
+}
+
+// Organization Model
+model Organization {
+  id                String   @id @default(uuid())
+  name              String
+  slug              String   @unique
+  description       String?
+  avatar            String?
+  
+  // Settings
+  allowPublicSignup Boolean  @default(false)
+  
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Relations
+  members           OrganizationMember[]
+  bugs              Bug[]
+  
+  @@index([slug])
+}
+
+// Organization Member with Roles
+enum OrganizationRole {
+  ADMIN
+  DEVELOPER
+  VIEWER
+}
+
+model OrganizationMember {
+  id             String           @id @default(uuid())
+  role           OrganizationRole @default(DEVELOPER)
+  
+  // Relations
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  joinedAt       DateTime         @default(now())
+  
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+// Bug Status Enum
+enum BugStatus {
+  OPEN
+  IN_PROGRESS
+  IN_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+// Bug Priority Enum
+enum BugPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// Bug Model
+model Bug {
+  id             String      @id @default(uuid())
+  title          String
+  description    String      @db.Text
+  status         BugStatus   @default(OPEN)
+  priority       BugPriority @default(MEDIUM)
+  
+  // Relationships
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  creatorId      String
+  creator        User         @relation("BugCreator", fields: [creatorId], references: [id])
+  
+  assigneeId     String?
+  assignee       User?        @relation("BugAssignee", fields: [assigneeId], references: [id])
+  
+  // Optional Fields
+  dueDate        DateTime?
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+  
+  // Metadata
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  // Relations
+  comments       Comment[]
+  attachments    Attachment[]
+  labels         Label[]
+  
+  @@index([organizationId])
+  @@index([creatorId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+// Comment Model
+model Comment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  
+  // Relations
+  bugId     String
+  bug       Bug      @relation(fields: [bugId], references: [id], onDelete: Cascade)
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([bugId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+// Attachment Model
+model Attachment {
+  id         String   @id @default(uuid())
+  filename   String
+  url        String
+  mimeType   String
+  size       Int
+  
+  // Relations
+  bugId      String
+  bug        Bug      @relation(fields: [bugId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  uploadedAt DateTime @default(now())
+  
+  @@index([bugId])
+}
+
+// Label Model
+model Label {
+  id    String @id @default(uuid())
+  name  String
+  color String // Hex color code
+  
+  // Relations
+  bugId String
+  bug   Bug    @relation(fields: [bugId], references: [id], onDelete: Cascade)
+  
+  @@index([bugId])
+}

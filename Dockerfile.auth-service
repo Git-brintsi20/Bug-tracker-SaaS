@@ -9,8 +9,11 @@ COPY prisma ./prisma
 # Copy auth service package files
 COPY services/auth-service/package.json ./
 
-# Install dependencies using clean install
-RUN npm install --legacy-peer-deps && npm install -g typescript
+# Install dependencies (skip postinstall, generate prisma client manually)
+RUN npm install --legacy-peer-deps --ignore-scripts
+
+# Generate Prisma client
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Copy auth service source code
 COPY services/auth-service/src ./src
