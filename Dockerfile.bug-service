@@ -10,14 +10,14 @@ COPY prisma ./prisma
 COPY services/bug-service/package.json ./
 
 # Install dependencies using clean install
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps && npm install -g typescript
 
 # Copy bug service source code
 COPY services/bug-service/src ./src
 COPY services/bug-service/tsconfig.json ./
 
 # Build the TypeScript code
-RUN npm run build
+RUN npx tsc
 
 # Create uploads directory
 RUN mkdir -p uploads
