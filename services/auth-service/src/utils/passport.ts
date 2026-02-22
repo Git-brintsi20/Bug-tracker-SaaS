@@ -1,7 +1,7 @@
 import passport from 'passport'
 import { Strategy as GitHubStrategy } from 'passport-github2'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
-import { PrismaClient } from '../../../../prisma/node_modules/@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { generateAccessToken, generateRefreshToken } from './jwt'
 
 const prisma = new PrismaClient()

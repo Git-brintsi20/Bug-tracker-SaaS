@@ -4,7 +4,7 @@ const mockBugDeleteMany = jest.fn();
 const mockBugFindMany = jest.fn();
 const mockBugFindUnique = jest.fn();
 
-jest.mock('../../../../../prisma/node_modules/@prisma/client', () => ({
+jest.mock('@prisma/client', () => ({
   PrismaClient: jest.fn().mockImplementation(() => ({
     bug: {
       updateMany: mockBugUpdateMany,

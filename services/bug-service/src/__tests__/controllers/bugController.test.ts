@@ -6,7 +6,7 @@ const mockBugUpdate = jest.fn();
 const mockBugDelete = jest.fn();
 const mockBugCount = jest.fn();
 
-jest.mock('../../../../../prisma/node_modules/@prisma/client', () => ({
+jest.mock('@prisma/client', () => ({
   PrismaClient: jest.fn().mockImplementation(() => ({
     bug: {
       create: mockBugCreate,
