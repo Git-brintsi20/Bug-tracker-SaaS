@@ -55,7 +55,7 @@ export const searchBugs = async (req: Request, res: Response): Promise<void> => 
 
     // Reporter filter
     if (reporterId) {
-      where.reporterId = reporterId
+      where.creatorId = reporterId
     }
 
     // Label filter
@@ -89,7 +89,7 @@ export const searchBugs = async (req: Request, res: Response): Promise<void> => 
       prisma.bug.findMany({
         where,
         include: {
-          reporter: {
+          creator: {
             select: {
               id: true,
               firstName: true,
@@ -97,7 +97,7 @@ export const searchBugs = async (req: Request, res: Response): Promise<void> => 
               avatar: true,
             },
           },
-          assignedTo: {
+          assignee: {
             select: {
               id: true,
               firstName: true,
