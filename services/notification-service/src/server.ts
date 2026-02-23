@@ -85,7 +85,7 @@ const start = async () => {
     await redisClient.connect()
     await startRedisSubscriber()
 
-    httpServer.listen(PORT, () => {
+    httpServer.listen(PORT, '0.0.0.0', () => {
       console.log(`🔔 Notification Service running on port ${PORT}`)
       console.log(`📊 Environment: ${process.env.NODE_ENV}`)
       console.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN}`)
