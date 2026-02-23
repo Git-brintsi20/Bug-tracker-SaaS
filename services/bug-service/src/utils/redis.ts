@@ -1,18 +1,18 @@
 import { createClient } from 'redis'
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
+const isProduction = redisUrl.startsWith('rediss://')
 
-// Let rediss:// URL handle TLS automatically — do NOT set tls: true explicitly
-// as node-redis already enables TLS when it sees rediss://
 const redisClient = createClient({
   url: redisUrl,
   pingInterval: 1000,
   socket: {
+    tls: isProduction,
     rejectUnauthorized: false,
     connectTimeout: 10000,
     reconnectStrategy: (retries: number) => {
-      const delay = Math.min(retries * 100, 5000)
-      console.log(`Redis reconnecting in ${delay}ms (attempt ${retries})...`)
+      const delay = Math.min(retries * 100, 3000)
+      console.log(`Redis connection lost. Retrying in ${delay}ms...`)
       return delay
     },
   },

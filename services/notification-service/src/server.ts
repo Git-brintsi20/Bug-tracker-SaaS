@@ -1,12 +1,17 @@
 import { Server } from 'socket.io'
-import { createServer } from 'http'
+import { createServer, IncomingMessage, ServerResponse } from 'http'
 import dotenv from 'dotenv'
 import { createClient } from 'redis'
 
 dotenv.config()
 
 const PORT = parseInt(process.env.PORT || '5003')
-const httpServer = createServer()
+
+// Health check handler so Render sees the port as open
+const httpServer = createServer((req: IncomingMessage, res: ServerResponse) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' })
+  res.end('Notification Service is Running')
+})
 
 const io = new Server(httpServer, {
   cors: {
@@ -16,17 +21,18 @@ const io = new Server(httpServer, {
 })
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
+const isProduction = redisUrl.startsWith('rediss://')
 
-// Let rediss:// URL handle TLS automatically — do NOT set tls: true explicitly
 const redisClient = createClient({
   url: redisUrl,
   pingInterval: 1000,
   socket: {
+    tls: isProduction,
     rejectUnauthorized: false,
     connectTimeout: 10000,
     reconnectStrategy: (retries: number) => {
-      const delay = Math.min(retries * 100, 5000)
-      console.log(`Redis reconnecting in ${delay}ms (attempt ${retries})...`)
+      const delay = Math.min(retries * 100, 3000)
+      console.log(`Redis connection lost. Retrying in ${delay}ms...`)
       return delay
     },
   },
@@ -57,6 +63,7 @@ io.on('connection', (socket) => {
 // Redis subscriber for cross-service notifications
 const startRedisSubscriber = async () => {
   const subscriber = redisClient.duplicate()
+  subscriber.on('error', (err) => console.error('Subscriber Error:', err.message))
   await subscriber.connect()
 
   await subscriber.subscribe('notifications', (message) => {
