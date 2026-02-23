@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useToast } from '@/hooks/use-toast'
 
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001/api'
+
 interface Organization {
   id: string
   name: string
@@ -75,7 +77,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/organizations`, {
+      const response = await fetch(`${AUTH_API_URL}/users/me/organizations`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -106,7 +108,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       if (!token) return
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/organizations/${organizationId}/membership`,
+        `${AUTH_API_URL}/organizations/${organizationId}/membership`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -189,7 +191,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         return null
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/organizations`, {
+      const response = await fetch(`${AUTH_API_URL}/organizations`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

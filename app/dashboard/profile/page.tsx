@@ -5,6 +5,8 @@ import { motion } from "framer-motion"
 import { User, Mail, Lock, Save, AlertCircle, CheckCircle } from "lucide-react"
 import axios from "axios"
 
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001/api'
+
 interface UserProfile {
   id: string
   firstName: string
@@ -39,7 +41,7 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      const response = await axios.get('http://localhost:5001/api/auth/me', {
+      const response = await axios.get(`${AUTH_API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       })
       setUser(response.data)
@@ -61,7 +63,7 @@ export default function ProfilePage() {
       setIsSaving(true)
       setMessage(null)
       await axios.put(
-        'http://localhost:5001/api/users/me',
+        `${AUTH_API_URL}/users/me`,
         profileData,
         { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } }
       )
@@ -92,7 +94,7 @@ export default function ProfilePage() {
       setIsSaving(true)
       setMessage(null)
       await axios.post(
-        'http://localhost:5001/api/users/me/change-password',
+        `${AUTH_API_URL}/users/me/change-password`,
         {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,

@@ -6,6 +6,8 @@ import { Search, Plus, Shield, UserCog, Eye, Trash2 } from "lucide-react"
 import { useOrganization } from "@/lib/contexts/OrganizationContext"
 import axios from "axios"
 
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001/api'
+
 interface Member {
   id: string
   role: string
@@ -36,7 +38,7 @@ export function TeamPageContent() {
 
     try {
       setLoading(true)
-      const response = await axios.get(`http://localhost:5001/api/organizations/${currentOrg.id}/members`, {
+      const response = await axios.get(`${AUTH_API_URL}/organizations/${currentOrg.id}/members`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       })
       setMembers(response.data)
@@ -52,7 +54,7 @@ export function TeamPageContent() {
 
     try {
       await axios.put(
-        `http://localhost:5001/api/organizations/${currentOrg.id}/members/${memberId}/role`,
+        `${AUTH_API_URL}/organizations/${currentOrg.id}/members/${memberId}/role`,
         { role: newRole },
         { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } }
       )
@@ -67,7 +69,7 @@ export function TeamPageContent() {
 
     try {
       await axios.delete(
-        `http://localhost:5001/api/organizations/${currentOrg.id}/members/${memberId}`,
+        `${AUTH_API_URL}/organizations/${currentOrg.id}/members/${memberId}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` } }
       )
       fetchMembers()

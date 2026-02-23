@@ -7,6 +7,8 @@ import { useOrganization } from "@/lib/contexts/OrganizationContext"
 import axios from "axios"
 import Link from "next/link"
 
+const BUG_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002/api'
+
 interface Statistics {
   totalBugs: number
   recentBugsCount: number
@@ -43,7 +45,7 @@ export default function DashboardPage() {
 
     try {
       setLoading(true)
-      const response = await axios.get('http://localhost:5002/api/statistics', {
+      const response = await axios.get(`${BUG_API_URL}/statistics`, {
         params: { organizationId: currentOrg.id },
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       })

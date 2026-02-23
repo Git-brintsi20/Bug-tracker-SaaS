@@ -8,6 +8,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Check } from "lucide-react"
 
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001/api'
+
 export function SignupForm() {
   const router = useRouter()
   const [formData, setFormData] = useState({
@@ -31,7 +33,7 @@ export function SignupForm() {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/register", {
+      const response = await fetch(`${AUTH_API_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

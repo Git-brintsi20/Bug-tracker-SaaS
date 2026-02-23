@@ -8,6 +8,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, ArrowRight, Github } from "lucide-react"
 
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001/api'
+
 export function LoginForm() {
   const router = useRouter()
   const [email, setEmail] = useState("")
@@ -22,7 +24,7 @@ export function LoginForm() {
     setError("")
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/login", {
+      const response = await fetch(`${AUTH_API_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +134,7 @@ export function LoginForm() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
-          onClick={() => window.location.href = 'http://localhost:5001/api/auth/github'}
+          onClick={() => window.location.href = `${AUTH_API_URL}/auth/github`}
           className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth"
         >
           <Github size={18} />
@@ -142,7 +144,7 @@ export function LoginForm() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
-          onClick={() => window.location.href = 'http://localhost:5001/api/auth/google'}
+          onClick={() => window.location.href = `${AUTH_API_URL}/auth/google`}
           className="flex items-center justify-center gap-2 px-4 py-2.5 border border-border rounded-lg text-foreground hover:bg-muted transition-smooth"
         >
           <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
