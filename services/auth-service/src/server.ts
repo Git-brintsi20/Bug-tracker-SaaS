@@ -14,7 +14,7 @@ import userRoutes from './routes/userRoutes'
 import { errorHandler } from './middleware/errorHandler'
 
 const app = express()
-const PORT = process.env.PORT || 5001
+const PORT = Number(process.env.PORT) || 5001
 
 // Middleware
 app.use(helmet())
