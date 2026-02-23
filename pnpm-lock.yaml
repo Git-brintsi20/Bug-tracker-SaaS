@@ -205,19 +205,6 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  prisma:
-    dependencies:
-      '@prisma/client':
-        specifier: ^5.8.0
-        version: 5.22.0(prisma@5.22.0)
-    devDependencies:
-      bcryptjs:
-        specifier: ^2.4.3
-        version: 2.4.3
-      prisma:
-        specifier: ^5.8.0
-        version: 5.22.0
-
 packages:
 
   '@alloc/quick-lru@5.2.0':
@@ -1315,9 +1302,6 @@ packages:
   baseline-browser-mapping@2.9.11:
     resolution: {integrity: sha512-Sg0xJUNDU1sJNGdfGWhVHX0kkZ+HWcvmVymJbj6NSgZZmW/8S9Y2HQ5euytnIgakgxN6papOAWiwDo1ctFDcoQ==}
     hasBin: true
-
-  bcryptjs@2.4.3:
-    resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
 
   browserslist@4.28.1:
     resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
@@ -3014,8 +2998,6 @@ snapshots:
       - debug
 
   baseline-browser-mapping@2.9.11: {}
-
-  bcryptjs@2.4.3: {}
 
   browserslist@4.28.1:
     dependencies:
