@@ -1,6 +1,9 @@
 # Bug Service Dockerfile
 FROM node:20-alpine
 
+# Install OpenSSL so Prisma can detect the correct engine binary
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 # Copy package files
