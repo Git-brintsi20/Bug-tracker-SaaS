@@ -16,14 +16,28 @@ const io = new Server(httpServer, {
 })
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
+const isTls = redisUrl.startsWith('rediss://')
 
 const redisClient = createClient({
   url: redisUrl,
-  socket: redisUrl.startsWith('rediss://') ? { tls: true, rejectUnauthorized: false } : undefined,
+  pingInterval: 1000,
+  socket: {
+    tls: isTls,
+    rejectUnauthorized: false,
+    keepAlive: 3000,
+    connectTimeout: 10000,
+    reconnectStrategy: (retries: number) => {
+      const delay = Math.min(retries * 100, 3000)
+      console.log(`Redis connection lost. Retrying in ${delay}ms...`)
+      return delay
+    },
+  },
 })
 
-redisClient.on('error', (err) => console.error('Redis Client Error', err))
-redisClient.on('connect', () => console.log('📦 Redis connected'))
+redisClient.on('error', (err) => console.error('Redis Client Error', err.message))
+redisClient.on('connect', () => console.log('📦 Redis Client Connected'))
+redisClient.on('ready', () => console.log('📦 Redis Client Ready'))
+redisClient.on('end', () => console.log('📦 Redis Client Disconnected'))
 
 io.on('connection', (socket) => {
   console.log(`✅ Client connected: ${socket.id}`)
