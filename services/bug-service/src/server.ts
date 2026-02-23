@@ -46,14 +46,12 @@ app.get('/api/statistics', authenticate, getStatistics)
 // Serve uploaded files statically
 app.use('/uploads', express.static('uploads'))
 
-// Connect Redis and start server
-connectRedis().then(() => {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🐛 Bug Service running on port ${PORT}`)
-    console.log(`📊 Environment: ${process.env.NODE_ENV}`)
-    console.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN}`)
-  })
-}).catch((err) => {
-  console.error('Failed to connect to Redis:', err)
-  process.exit(1)
+// Start server FIRST (so Render health check sees the port), then connect Redis in background
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🐛 Bug Service running on port ${PORT}`)
+  console.log(`📊 Environment: ${process.env.NODE_ENV}`)
+  console.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN}`)
 })
+
+// Non-blocking: Redis connects in background, cache ops are fail-safe
+connectRedis()

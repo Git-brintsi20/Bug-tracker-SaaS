@@ -16,26 +16,23 @@ const io = new Server(httpServer, {
 })
 
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
-const isTls = redisUrl.startsWith('rediss://')
 
+// Let rediss:// URL handle TLS automatically — do NOT set tls: true explicitly
 const redisClient = createClient({
   url: redisUrl,
   pingInterval: 1000,
   socket: {
-    tls: isTls,
     rejectUnauthorized: false,
-    keepAlive: 3000,
     connectTimeout: 10000,
     reconnectStrategy: (retries: number) => {
-      const delay = Math.min(retries * 100, 3000)
-      console.log(`Redis connection lost. Retrying in ${delay}ms...`)
+      const delay = Math.min(retries * 100, 5000)
+      console.log(`Redis reconnecting in ${delay}ms (attempt ${retries})...`)
       return delay
     },
   },
 })
 
 redisClient.on('error', (err) => console.error('Redis Client Error', err.message))
-redisClient.on('connect', () => console.log('📦 Redis Client Connected'))
 redisClient.on('ready', () => console.log('📦 Redis Client Ready'))
 redisClient.on('end', () => console.log('📦 Redis Client Disconnected'))
 
@@ -81,18 +78,19 @@ const startRedisSubscriber = async () => {
 }
 
 const start = async () => {
+  // Start HTTP server FIRST so Render health check sees the port
+  httpServer.listen(PORT, '0.0.0.0', () => {
+    console.log(`🔔 Notification Service running on port ${PORT}`)
+    console.log(`📊 Environment: ${process.env.NODE_ENV}`)
+    console.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN}`)
+  })
+
+  // Then connect Redis in background — if it fails, it retries automatically
   try {
     await redisClient.connect()
     await startRedisSubscriber()
-
-    httpServer.listen(PORT, '0.0.0.0', () => {
-      console.log(`🔔 Notification Service running on port ${PORT}`)
-      console.log(`📊 Environment: ${process.env.NODE_ENV}`)
-      console.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN}`)
-    })
   } catch (error) {
-    console.error('Failed to start notification service:', error)
-    process.exit(1)
+    console.error('Redis connect failed (will retry in background):', error)
   }
 }
 
