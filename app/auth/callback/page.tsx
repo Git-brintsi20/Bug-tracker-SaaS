@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -76,5 +76,22 @@ export default function OAuthCallbackPage() {
         <p className="text-muted-foreground">Please wait while we sign you in.</p>
       </div>
     </div>
+  )
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+          <h2 className="text-xl font-semibold text-foreground">Loading...</h2>
+        </div>
+      </div>
+    }>
+      <OAuthCallbackContent />
+    </Suspense>
   )
 }
