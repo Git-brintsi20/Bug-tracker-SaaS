@@ -1,5 +1,5 @@
 {
   "buildCommand": "next build",
-  "installCommand": "pnpm install --no-frozen-lockfile",
+  "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs"
 }
