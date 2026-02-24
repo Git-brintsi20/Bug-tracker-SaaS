@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, ArrowRight, Github } from "lucide-react"
+import { toast } from "sonner"
 
 const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001/api'
 
@@ -24,6 +25,8 @@ export function LoginForm() {
     setError("")
 
     try {
+      console.log('Attempting login to:', `${AUTH_API_URL}/auth/login`)
+      
       const response = await fetch(`${AUTH_API_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -35,7 +38,30 @@ export function LoginForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed")
+        const errorMessage = data.error || "Login failed"
+        const errorCode = data.code
+        
+        // Show detailed error toasts
+        if (errorCode === 'INVALID_CREDENTIALS') {
+          toast.error("Invalid credentials", {
+            description: "The email or password you entered is incorrect. Please try again."
+          })
+        } else if (errorCode === 'MISSING_CREDENTIALS') {
+          toast.error("Missing information", {
+            description: "Please enter both email and password."
+          })
+        } else if (errorCode === 'SERVER_ERROR') {
+          toast.error("Server error", {
+            description: "We're having trouble connecting. Please try again later."
+          })
+        } else {
+          toast.error("Login failed", {
+            description: errorMessage
+          })
+        }
+        
+        setError(errorMessage)
+        return
       }
 
       // Store tokens
@@ -43,10 +69,19 @@ export function LoginForm() {
       localStorage.setItem("refreshToken", data.refreshToken)
       localStorage.setItem("user", JSON.stringify(data.user))
 
+      toast.success("Login successful!", {
+        description: `Welcome back, ${data.user.firstName || data.user.username}!`
+      })
+
       // Redirect to dashboard
       router.push("/dashboard")
     } catch (err: any) {
-      setError(err.message || "Something went wrong")
+      console.error('Login error:', err)
+      const errorMsg = err.message || "Unable to connect to server"
+      setError(errorMsg)
+      toast.error("Connection error", {
+        description: "Could not connect to the authentication server. Please check your connection and try again."
+      })
     } finally {
       setIsLoading(false)
     }

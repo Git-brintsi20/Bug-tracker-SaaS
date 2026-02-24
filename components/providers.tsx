@@ -4,7 +4,7 @@ import type { ReactNode } from "react"
 import { useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { OrganizationProvider } from "@/lib/contexts/OrganizationContext"
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/sonner"
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(

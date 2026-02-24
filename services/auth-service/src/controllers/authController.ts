@@ -32,9 +32,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, username, password, firstName, lastName } = req.body
 
+    console.log('Registration attempt for:', email)
+
     // Validate input
     if (!email || !username || !password) {
-      res.status(400).json({ error: 'Email, username, and password are required' })
+      console.log('❌ Registration failed: Missing fields')
+      res.status(400).json({ error: 'Email, username, and password are required', code: 'MISSING_FIELDS' })
       return
     }
 
@@ -46,7 +49,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     })
 
     if (existingUser) {
-      res.status(400).json({ error: 'User with this email or username already exists' })
+      console.log('❌ Registration failed: User already exists')
+      res.status(400).json({ 
+        error: existingUser.email === email 
+          ? 'An account with this email already exists' 
+          : 'This username is already taken',
+        code: 'USER_EXISTS'
+      })
       return
     }
 
@@ -77,14 +86,16 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const accessToken = generateAccessToken(user.id)
     const refreshToken = generateRefreshToken(user.id)
 
+    console.log('✓ Registration successful for:', email)
+
     res.status(201).json({
       user,
       accessToken,
       refreshToken,
     })
   } catch (error) {
-    console.error('Register error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    console.error('❌ Register error:', error)
+    res.status(500).json({ error: 'Server error during registration. Please try again.', code: 'SERVER_ERROR' })
   }
 }
 
@@ -92,9 +103,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body
 
+    console.log('Login attempt for:', email)
+
     // Validate input
     if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' })
+      console.log('❌ Login failed: Missing credentials')
+      res.status(400).json({ error: 'Email and password are required', code: 'MISSING_CREDENTIALS' })
       return
     }
 
@@ -104,7 +118,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     })
 
     if (!user || !user.password) {
-      res.status(401).json({ error: 'Invalid credentials' })
+      console.log('❌ Login failed: User not found or no password set')
+      res.status(401).json({ error: 'Invalid email or password', code: 'INVALID_CREDENTIALS' })
       return
     }
 
@@ -112,7 +127,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const isValid = await bcrypt.compare(password, user.password)
 
     if (!isValid) {
-      res.status(401).json({ error: 'Invalid credentials' })
+      console.log('❌ Login failed: Invalid password')
+      res.status(401).json({ error: 'Invalid email or password', code: 'INVALID_CREDENTIALS' })
       return
     }
 
@@ -125,6 +141,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Generate tokens
     const accessToken = generateAccessToken(user.id)
     const refreshToken = generateRefreshToken(user.id)
+
+    console.log('✓ Login successful for:', email)
 
     res.json({
       user: {
@@ -139,8 +157,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       refreshToken,
     })
   } catch (error) {
-    console.error('Login error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    console.error('❌ Login error:', error)
+    res.status(500).json({ error: 'Server error during login. Please try again.', code: 'SERVER_ERROR' })
   }
 }
 

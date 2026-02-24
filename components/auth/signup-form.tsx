@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Check } from "lucide-react"
+import { toast } from "sonner"
 
 const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001/api'
 
@@ -27,12 +28,26 @@ export function SignupForm() {
     setError("")
 
     if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords don't match", {
+        description: "Please make sure both password fields match."
+      })
       setError("Passwords do not match")
       setIsLoading(false)
       return
     }
 
+    if (formData.password.length < 8) {
+      toast.error("Weak password", {
+        description: "Password must be at least 8 characters long."
+      })
+      setError("Password must be at least 8 characters long")
+      setIsLoading(false)
+      return
+    }
+
     try {
+      console.log('Attempting registration to:', `${AUTH_API_URL}/auth/register`)
+      
       const response = await fetch(`${AUTH_API_URL}/auth/register`, {
         method: "POST",
         headers: {
@@ -50,7 +65,30 @@ export function SignupForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Registration failed")
+        const errorMessage = data.error || "Registration failed"
+        const errorCode = data.code
+        
+        // Show detailed error toasts
+        if (errorCode === 'USER_EXISTS') {
+          toast.error("Account already exists", {
+            description: errorMessage
+          })
+        } else if (errorCode === 'MISSING_FIELDS') {
+          toast.error("Missing information", {
+            description: "Please fill in all required fields."
+          })
+        } else if (errorCode === 'SERVER_ERROR') {
+          toast.error("Server error", {
+            description: "We're having trouble creating your account. Please try again later."
+          })
+        } else {
+          toast.error("Registration failed", {
+            description: errorMessage
+          })
+        }
+        
+        setError(errorMessage)
+        return
       }
 
       // Store tokens
@@ -58,10 +96,19 @@ export function SignupForm() {
       localStorage.setItem("refreshToken", data.refreshToken)
       localStorage.setItem("user", JSON.stringify(data.user))
 
+      toast.success("Account created!", {
+        description: `Welcome aboard, ${data.user.firstName}! Redirecting to dashboard...`
+      })
+
       // Redirect to dashboard
       router.push("/dashboard")
     } catch (err: any) {
-      setError(err.message || "Something went wrong")
+      console.error('Registration error:', err)
+      const errorMsg = err.message || "Unable to connect to server"
+      setError(errorMsg)
+      toast.error("Connection error", {
+        description: "Could not connect to the authentication server. Please check your connection and try again."
+      })
     } finally {
       setIsLoading(false)
     }

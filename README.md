@@ -151,7 +151,31 @@ NewBugTracker/
 └── package.json                     # Frontend dependencies
 ```
 
-## 🚀 Getting Started
+## � Documentation
+
+### Setup Guides
+
+- **[QUICK_START_OAUTH.md](./QUICK_START_OAUTH.md)** - 5-minute OAuth setup for local development
+- **[OAUTH_SETUP.md](./OAUTH_SETUP.md)** - Complete OAuth documentation (GitHub & Google)
+
+### Google OAuth Guides (Detailed)
+
+- **[GOOGLE_OAUTH_VISUAL.md](./GOOGLE_OAUTH_VISUAL.md)** ⭐ Quick visual guide with exact steps
+- **[GOOGLE_OAUTH_DETAILED.md](./GOOGLE_OAUTH_DETAILED.md)** - Complete walkthrough with explanations
+
+### Production Deployment
+
+- **[PRODUCTION_QUICK_REF.md](./PRODUCTION_QUICK_REF.md)** ⭐ Quick reference for production URLs
+- **[OAUTH_PRODUCTION.md](./OAUTH_PRODUCTION.md)** - Production OAuth setup guide
+- **[PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md)** - Complete production deployment guide
+- **[ENV_VARIABLES_PRODUCTION.md](./ENV_VARIABLES_PRODUCTION.md)** - Environment variables reference
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - General deployment documentation
+
+### Other Resources
+
+- **[FIXES_APPLIED.md](./FIXES_APPLIED.md)** - Recent fixes and improvements
+
+## �🚀 Getting Started
 
 ### Prerequisites
 
