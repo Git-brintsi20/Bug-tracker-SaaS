@@ -1,5 +1,5 @@
 {
   "buildCommand": "next build",
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "rm -f pnpm-lock.yaml && npm install --legacy-peer-deps",
   "framework": "nextjs"
 }
