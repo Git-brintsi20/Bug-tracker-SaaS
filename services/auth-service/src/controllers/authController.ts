@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt'
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js'
 
 const prisma = new PrismaClient()
 

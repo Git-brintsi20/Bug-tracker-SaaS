@@ -1,12 +1,12 @@
 import { Router } from 'express'
-import { authenticate } from '../middleware/auth'
+import { authenticate } from '../middleware/auth.js'
 import {
   bulkUpdateStatus,
   bulkUpdatePriority,
   bulkAssign,
   bulkDelete,
   bulkAddLabels,
-} from '../controllers/bulkController'
+} from '../controllers/bulkController.js'
 
 const router = Router()
 

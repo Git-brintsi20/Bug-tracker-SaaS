@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { getCache, setCache, deleteCachePattern } from '../utils/redis'
+import { getCache, setCache, deleteCachePattern } from '../utils/redis.js'
 
 const prisma = new PrismaClient()
 
@@ -185,7 +185,7 @@ export const createBug = async (req: Request, res: Response): Promise<void> => {
     await deleteCachePattern(`bugs:${organizationId}:*`)
     
     // Publish real-time notification
-    const { publishNotification } = await import('../utils/redis')
+    const { publishNotification } = await import('../utils/redis.js')
     await publishNotification(organizationId, 'bug-created', bug)
     
     res.status(201).json(bug)
@@ -220,7 +220,7 @@ export const updateBug = async (req: Request, res: Response): Promise<void> => {
     await deleteCachePattern(`bugs:${bug.organizationId}:*`)
     
     // Publish real-time notification
-    const { publishNotification } = await import('../utils/redis')
+    const { publishNotification } = await import('../utils/redis.js')
     await publishNotification(bug.organizationId, 'bug-updated', bug)
     
     res.json(bug)
@@ -242,7 +242,7 @@ export const deleteBug = async (req: Request, res: Response): Promise<void> => {
     await deleteCachePattern(`bugs:${bug.organizationId}:*`)
     
     // Publish real-time notification
-    const { publishNotification } = await import('../utils/redis')
+    const { publishNotification } = await import('../utils/redis.js')
     await publishNotification(bug.organizationId, 'bug-deleted', { id })
 
     res.json({ message: 'Bug deleted successfully' })

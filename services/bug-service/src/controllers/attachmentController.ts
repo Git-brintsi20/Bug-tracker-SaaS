@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { deleteCachePattern } from '../utils/redis'
+import { deleteCachePattern } from '../utils/redis.js'
 import path from 'path'
 import fs from 'fs'
 

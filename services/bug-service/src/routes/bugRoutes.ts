@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { getBugs, getBugById, createBug, updateBug, deleteBug } from '../controllers/bugController'
-import { authenticate } from '../middleware/auth'
+import { getBugs, getBugById, createBug, updateBug, deleteBug } from '../controllers/bugController.js'
+import { authenticate } from '../middleware/auth.js'
 
 const router = Router()
 

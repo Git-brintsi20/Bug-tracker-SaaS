@@ -7,11 +7,11 @@ import path from 'path'
 // Load environment variables FIRST before any other imports
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
-import passport from './utils/passport'
-import authRoutes from './routes/authRoutes'
-import organizationRoutes from './routes/organizationRoutes'
-import userRoutes from './routes/userRoutes'
-import { errorHandler } from './middleware/errorHandler'
+import passport from './utils/passport.js'
+import authRoutes from './routes/authRoutes.js'
+import organizationRoutes from './routes/organizationRoutes.js'
+import userRoutes from './routes/userRoutes.js'
+import { errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 5001

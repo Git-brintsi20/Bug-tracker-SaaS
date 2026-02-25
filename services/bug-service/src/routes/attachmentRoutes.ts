@@ -1,12 +1,12 @@
 import { Router } from 'express'
-import { authenticate } from '../middleware/auth'
-import { upload } from '../middleware/upload'
+import { authenticate } from '../middleware/auth.js'
+import { upload } from '../middleware/upload.js'
 import {
   getAttachments,
   uploadAttachment,
   deleteAttachment,
   downloadAttachment,
-} from '../controllers/attachmentController'
+} from '../controllers/attachmentController.js'
 
 const router = Router({ mergeParams: true })
 

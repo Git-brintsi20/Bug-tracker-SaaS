@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { authenticate } from '../middleware/auth'
+import { authenticate } from '../middleware/auth.js'
 import {
   getLabels,
   createLabel,
@@ -7,7 +7,7 @@ import {
   deleteLabel,
   addLabelToBug,
   removeLabelFromBug,
-} from '../controllers/labelController'
+} from '../controllers/labelController.js'
 
 const router = Router()
 
