@@ -22,7 +22,8 @@ function OAuthCallbackContent() {
     }
 
     if (token && refreshToken) {
-      // Store tokens
+      // Store tokens under both keys for backward compatibility.
+      localStorage.setItem("token", token)
       localStorage.setItem("accessToken", token)
       localStorage.setItem("refreshToken", refreshToken)
 

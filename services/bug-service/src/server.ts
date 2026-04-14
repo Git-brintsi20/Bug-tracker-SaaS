@@ -2,20 +2,20 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
-import bugRoutes from './routes/bugRoutes.js'
-import commentRoutes from './routes/commentRoutes.js'
-import labelRoutes from './routes/labelRoutes.js'
-import attachmentRoutes from './routes/attachmentRoutes.js'
-import exportRoutes from './routes/exportRoutes.js'
-import searchRoutes from './routes/searchRoutes.js'
-import bulkRoutes from './routes/bulkRoutes.js'
-import { connectRedis } from './utils/redis.js'
-import { authenticate } from './middleware/auth.js'
-import { getStatistics } from './controllers/statisticsController.js'
+import path from 'path'
+import bugRoutes from './routes/bugRoutes'
+import commentRoutes from './routes/commentRoutes'
+import labelRoutes from './routes/labelRoutes'
+import attachmentRoutes from './routes/attachmentRoutes'
+import exportRoutes from './routes/exportRoutes'
+import searchRoutes from './routes/searchRoutes'
+import bulkRoutes from './routes/bulkRoutes'
+import { connectRedis } from './utils/redis'
+import { authenticate } from './middleware/auth'
+import { getStatistics } from './controllers/statisticsController'
 
-// Load from services/bug-service directory
-dotenv.config({ path: './services/bug-service/.env' })
-dotenv.config() // Also try current directory
+// Load service-local environment and override any inherited global variables.
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true })
 
 const app = express()
 const PORT = parseInt(process.env.PORT || '5002')
@@ -32,6 +32,50 @@ app.use(express.urlencoded({ extended: true }))
 // Routes
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'bug-service' })
+})
+
+// Organization-level routes
+app.get('/api/organizations/:organizationId/bugs', authenticate, async (req, res) => {
+  // Inject organizationId into query parameters
+  req.query.organizationId = req.params.organizationId
+  // Import and call getBugs handler
+  const { getBugs } = await import('./controllers/bugController.js')
+  return getBugs(req, res)
+})
+
+app.get('/api/organizations/:organizationId/bugs/statistics', authenticate, async (req, res) => {
+  req.query.organizationId = req.params.organizationId
+  return getStatistics(req, res)
+})
+
+app.post('/api/organizations/:organizationId/bugs/bulk/status', authenticate, async (req, res) => {
+  req.body.organizationId = req.params.organizationId
+  const { bulkUpdateStatus } = await import('./controllers/bulkController.js')
+  return bulkUpdateStatus(req, res)
+})
+
+app.post('/api/organizations/:organizationId/bugs/bulk/priority', authenticate, async (req, res) => {
+  req.body.organizationId = req.params.organizationId
+  const { bulkUpdatePriority } = await import('./controllers/bulkController.js')
+  return bulkUpdatePriority(req, res)
+})
+
+app.post('/api/organizations/:organizationId/bugs/bulk/assign', authenticate, async (req, res) => {
+  req.body.organizationId = req.params.organizationId
+  const { bulkAssign } = await import('./controllers/bulkController.js')
+  return bulkAssign(req, res)
+})
+
+app.post('/api/organizations/:organizationId/bugs/bulk/labels', authenticate, async (req, res) => {
+  req.body.organizationId = req.params.organizationId
+  const { bulkAddLabels } = await import('./controllers/bulkController.js')
+  return bulkAddLabels(req, res)
+})
+
+app.post('/api/organizations/:organizationId/bugs/bulk/delete', authenticate, async (req, res) => {
+  req.body.organizationId = req.params.organizationId
+  const { bulkDelete } = await import('./controllers/bulkController.js')
+  return bulkDelete(req, res)
 })
 
 app.use('/api/bugs', bugRoutes)

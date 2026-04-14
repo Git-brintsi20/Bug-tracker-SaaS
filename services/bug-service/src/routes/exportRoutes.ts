@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { authenticate } from '../middleware/auth.js'
-import { exportBugsCSV, exportBugsPDF } from '../controllers/exportController.js'
+import { authenticate } from '../middleware/auth'
+import { exportBugsCSV, exportBugsPDF } from '../controllers/exportController'
 
 const router = Router()
 

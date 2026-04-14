@@ -70,9 +70,10 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const fetchOrganizations = async () => {
     try {
       setIsLoading(true)
-      const token = localStorage.getItem('accessToken')
+      const token = localStorage.getItem('token') || localStorage.getItem('accessToken')
       
       if (!token) {
+        setOrganizations([])
         setIsLoading(false)
         return
       }
@@ -85,7 +86,23 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch organizations')
+        // Do not crash the page for auth/session edge cases.
+        if (response.status === 401 || response.status === 403) {
+          setOrganizations([])
+          return
+        }
+
+        let errorMessage = 'Failed to fetch organizations'
+        try {
+          const errorData = await response.json()
+          if (errorData?.message || errorData?.error) {
+            errorMessage = errorData.message || errorData.error
+          }
+        } catch {
+          // Ignore parse failures and use fallback message.
+        }
+
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -104,7 +121,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
   const fetchMembership = async (organizationId: string) => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('token') || localStorage.getItem('accessToken')
       if (!token) return
 
       const response = await fetch(
@@ -118,7 +135,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       )
 
       if (!response.ok) {
-        throw new Error('Failed to fetch membership')
+        console.warn(`Failed to fetch membership: ${response.status}`)
+        return
       }
 
       const data = await response.json()
@@ -181,7 +199,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     description?: string 
   }): Promise<Organization | null> => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('token') || localStorage.getItem('accessToken')
       if (!token) {
         toast({
           title: 'Error',

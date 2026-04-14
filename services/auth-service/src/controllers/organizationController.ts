@@ -3,6 +3,32 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+export const getUserMembership = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId!
+    const { organizationId } = req.params
+
+    const membership = await prisma.organizationMember.findUnique({
+      where: {
+        userId_organizationId: {
+          userId,
+          organizationId,
+        },
+      },
+    })
+
+    if (!membership) {
+      res.status(404).json({ error: 'Membership not found' })
+      return
+    }
+
+    res.json({ membership })
+  } catch (error) {
+    console.error('Get user membership error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
 export const getOrganizationMembers = async (req: Request, res: Response): Promise<void> => {
   try {
     const { organizationId } = req.params

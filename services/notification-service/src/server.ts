@@ -1,9 +1,10 @@
 import { Server } from 'socket.io'
 import { createServer, IncomingMessage, ServerResponse } from 'http'
 import dotenv from 'dotenv'
+import path from 'path'
 import { createClient } from 'redis'
 
-dotenv.config()
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true })
 
 const PORT = parseInt(process.env.PORT || '5003')
 

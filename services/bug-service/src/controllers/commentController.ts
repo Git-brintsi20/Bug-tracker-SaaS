@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
-import { publishNotification } from '../utils/redis.js'
+import { publishNotification } from '../utils/redis'
 
 const prisma = new PrismaClient()
 

@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const bugController_1 = require("../controllers/bugController");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.get('/', bugController_1.getBugs);
+router.get('/:id', bugController_1.getBugById);
+router.post('/', bugController_1.createBug);
+router.put('/:id', bugController_1.updateBug);
+router.delete('/:id', bugController_1.deleteBug);
+exports.default = router;

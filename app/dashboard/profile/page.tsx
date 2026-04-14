@@ -129,7 +129,7 @@ export default function ProfilePage() {
     )
   }
 
-  const initials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+  const initials = `${(user.firstName || 'U')[0]}${(user.lastName || 'U')[0]}`.toUpperCase()
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -213,7 +213,7 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-foreground mb-1.5">First Name</label>
                 <input
                   type="text"
-                  value={isEditing ? profileData.firstName : user.firstName}
+                  value={profileData.firstName}
                   onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                   disabled={!isEditing}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary transition-smooth"
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-foreground mb-1.5">Last Name</label>
                 <input
                   type="text"
-                  value={isEditing ? profileData.lastName : user.lastName}
+                  value={profileData.lastName}
                   onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                   disabled={!isEditing}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary transition-smooth"
@@ -235,7 +235,7 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
                 <input
                   type="email"
-                  value={isEditing ? profileData.email : user.email}
+                  value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                   disabled={!isEditing}
                   className="w-full px-4 py-2 bg-input border border-border rounded-lg text-foreground disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary transition-smooth"

@@ -64,7 +64,8 @@ export function LoginForm() {
         return
       }
 
-      // Store tokens
+      // Store tokens under both keys for backward compatibility.
+      localStorage.setItem("token", data.accessToken)
       localStorage.setItem("accessToken", data.accessToken)
       localStorage.setItem("refreshToken", data.refreshToken)
       localStorage.setItem("user", JSON.stringify(data.user))

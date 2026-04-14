@@ -4,6 +4,26 @@ import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
+export const getOrganizations = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.userId!
+
+    const memberships = await prisma.organizationMember.findMany({
+      where: { userId },
+      include: {
+        organization: true,
+      },
+    })
+
+    const organizations = memberships.map(m => m.organization)
+
+    res.json({ organizations })
+  } catch (error) {
+    console.error('Get organizations error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.userId!

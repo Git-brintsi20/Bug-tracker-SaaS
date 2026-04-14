@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { getComments, createComment } from '../controllers/commentController.js'
-import { authenticate } from '../middleware/auth.js'
+import { getComments, createComment } from '../controllers/commentController'
+import { authenticate } from '../middleware/auth'
 
 const router = Router({ mergeParams: true })
 

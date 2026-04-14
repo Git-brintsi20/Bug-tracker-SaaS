@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { IssueTable } from "@/components/issue-table"
 import { Search, Filter, Plus, Download, X, CheckSquare } from "lucide-react"
-import { bugApi, exports, bulk } from "@/lib/api"
+import { bugs, exports, bulk } from "@/lib/api"
 import { useOrganization } from "@/lib/contexts/OrganizationContext"
 import { CreateBugModal } from "@/components/create-bug-modal"
 import { EditBugModal } from "@/components/edit-bug-modal"
@@ -76,23 +76,23 @@ export function IssuesPageContent() {
 
   const fetchIssues = async () => {
     if (!currentOrg) return
-    
+
     try {
       setLoading(true)
-      const params: any = { organizationId: currentOrg.id }
-      
+      const params: any = {}
+
       // Apply status filter from simple select or advanced filters
       if (statusFilter) {
         params.status = statusFilter
       } else if (advancedFilters.status.length > 0) {
         params.status = advancedFilters.status.join(',')
       }
-      
+
       // Apply priority filter
       if (advancedFilters.priority.length > 0) {
         params.priority = advancedFilters.priority.join(',')
       }
-      
+
       // Apply assignee filter
       if (advancedFilters.assignee) {
         if (advancedFilters.assignee === 'unassigned') {
@@ -101,7 +101,7 @@ export function IssuesPageContent() {
           params.assignee = advancedFilters.assignee
         }
       }
-      
+
       // Apply date range
       if (advancedFilters.dateFrom) {
         params.dateFrom = advancedFilters.dateFrom
@@ -109,20 +109,20 @@ export function IssuesPageContent() {
       if (advancedFilters.dateTo) {
         params.dateTo = advancedFilters.dateTo
       }
-      
-      const response = await bugApi.getAll(params)
-      
+
+      const response = await bugs.getAll(currentOrg.id, params)
+
       // Transform API data to match UI format
       const transformedIssues = response.data.map((bug: any) => ({
         id: bug.id,
         title: bug.title,
         status: bug.status.toLowerCase(),
         priority: bug.priority.toLowerCase(),
-        assignee: bug.assignedTo ? `${bug.assignedTo.firstName} ${bug.assignedTo.lastName}` : "Unassigned",
+        assignee: bug.assignee ? `${bug.assignee.firstName} ${bug.assignee.lastName}` : "Unassigned",
         created: new Date(bug.createdAt).toLocaleDateString(),
         updated: new Date(bug.updatedAt).toLocaleDateString(),
       }))
-      
+
       setIssues(transformedIssues)
     } catch (error) {
       console.error('Failed to fetch bugs:', error)

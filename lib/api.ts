@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosInstance } from 'axios'
 import { toast } from '@/hooks/use-toast'
 
 const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_URL || 'http://localhost:5001/api'
@@ -21,9 +21,9 @@ export const bugApi = axios.create({
 })
 
 // Add token to both API instances
-const addTokenInterceptor = (instance: typeof axios) => {
+const addTokenInterceptor = (instance: AxiosInstance) => {
   instance.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -35,7 +35,7 @@ addTokenInterceptor(authApi)
 addTokenInterceptor(bugApi)
 
 // Handle errors and token refresh for both instances
-const addResponseInterceptor = (instance: typeof axios) => {
+const addResponseInterceptor = (instance: AxiosInstance) => {
   instance.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -77,8 +77,6 @@ const addResponseInterceptor = (instance: typeof axios) => {
   )
 }
 
-addResponseInterceptor(authApi)
-addResponseInterceptor(bugApi)
 addResponseInterceptor(authApi)
 addResponseInterceptor(bugApi)
 
