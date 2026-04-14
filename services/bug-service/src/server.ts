@@ -13,6 +13,8 @@ import bulkRoutes from './routes/bulkRoutes'
 import { connectRedis } from './utils/redis'
 import { authenticate } from './middleware/auth'
 import { getStatistics } from './controllers/statisticsController'
+import { getBugs } from './controllers/bugController'
+import { bulkUpdateStatus, bulkUpdatePriority, bulkAssign, bulkAddLabels, bulkDelete } from './controllers/bulkController'
 
 // Load service-local environment and override any inherited global variables.
 dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true })
@@ -36,10 +38,7 @@ app.get('/health', (req, res) => {
 
 // Organization-level routes
 app.get('/api/organizations/:organizationId/bugs', authenticate, async (req, res) => {
-  // Inject organizationId into query parameters
   req.query.organizationId = req.params.organizationId
-  // Import and call getBugs handler
-  const { getBugs } = await import('./controllers/bugController')
   return getBugs(req, res)
 })
 
@@ -50,31 +49,26 @@ app.get('/api/organizations/:organizationId/bugs/statistics', authenticate, asyn
 
 app.post('/api/organizations/:organizationId/bugs/bulk/status', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkUpdateStatus } = await import('./controllers/bulkController')
   return bulkUpdateStatus(req, res)
 })
 
 app.post('/api/organizations/:organizationId/bugs/bulk/priority', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkUpdatePriority } = await import('./controllers/bulkController')
   return bulkUpdatePriority(req, res)
 })
 
 app.post('/api/organizations/:organizationId/bugs/bulk/assign', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkAssign } = await import('./controllers/bulkController')
   return bulkAssign(req, res)
 })
 
 app.post('/api/organizations/:organizationId/bugs/bulk/labels', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkAddLabels } = await import('./controllers/bulkController')
   return bulkAddLabels(req, res)
 })
 
 app.post('/api/organizations/:organizationId/bugs/bulk/delete', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkDelete } = await import('./controllers/bulkController')
   return bulkDelete(req, res)
 })
 
