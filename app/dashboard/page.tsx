@@ -41,6 +41,13 @@ export default function DashboardPage() {
   const fetchStatistics = async () => {
     if (!currentOrg) return
 
+    // Check if token exists
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken')
+    if (!token) {
+      console.warn('No token found, skipping statistics fetch')
+      return
+    }
+
     try {
       setLoading(true)
       const response = await bugs.statistics(currentOrg.id)
