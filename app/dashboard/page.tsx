@@ -4,10 +4,8 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Bug, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertCircle, Activity, Users } from "lucide-react"
 import { useOrganization } from "@/lib/contexts/OrganizationContext"
-import axios from "axios"
+import { bugs } from "@/lib/api"
 import Link from "next/link"
-
-const BUG_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002/api'
 
 interface Statistics {
   totalBugs: number
@@ -45,10 +43,7 @@ export default function DashboardPage() {
 
     try {
       setLoading(true)
-      const response = await axios.get(`${BUG_API_URL}/statistics`, {
-        params: { organizationId: currentOrg.id },
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-      })
+      const response = await bugs.statistics(currentOrg.id)
       setStats(response.data)
     } catch (error) {
       console.error('Failed to fetch statistics:', error)

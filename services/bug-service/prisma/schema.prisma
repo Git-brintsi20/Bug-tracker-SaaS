@@ -58,6 +58,7 @@ model Organization {
   // Relations
   members           OrganizationMember[]
   bugs              Bug[]
+  labels            Label[]
   
   @@index([slug])
 }
@@ -188,10 +189,14 @@ model Label {
   id    String @id @default(uuid())
   name  String
   color String // Hex color code
-  
+
   // Relations
-  bugId String
-  bug   Bug    @relation(fields: [bugId], references: [id], onDelete: Cascade)
-  
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  bugId String?
+  bug   Bug?    @relation(fields: [bugId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
   @@index([bugId])
 }

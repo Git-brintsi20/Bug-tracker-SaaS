@@ -85,8 +85,14 @@ export function IssueTable({ issues, onRowClick, onEdit, onDelete, selectedIds =
           </thead>
           <tbody>
             {issues.map((issue, index) => {
-              const statusConfig_ = statusConfig[issue.status]
-              const priorityConfig_ = priorityConfig[issue.priority]
+              const statusConfig_ = statusConfig[issue.status as keyof typeof statusConfig]
+              const priorityConfig_ = priorityConfig[issue.priority as keyof typeof priorityConfig]
+
+              // Fallback for invalid statuses
+              if (!statusConfig_ || !priorityConfig_) {
+                return null
+              }
+
               const StatusIcon = statusConfig_.icon
 
               return (

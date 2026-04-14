@@ -39,7 +39,7 @@ app.get('/api/organizations/:organizationId/bugs', authenticate, async (req, res
   // Inject organizationId into query parameters
   req.query.organizationId = req.params.organizationId
   // Import and call getBugs handler
-  const { getBugs } = await import('./controllers/bugController.js')
+  const { getBugs } = await import('./controllers/bugController')
   return getBugs(req, res)
 })
 
@@ -50,31 +50,31 @@ app.get('/api/organizations/:organizationId/bugs/statistics', authenticate, asyn
 
 app.post('/api/organizations/:organizationId/bugs/bulk/status', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkUpdateStatus } = await import('./controllers/bulkController.js')
+  const { bulkUpdateStatus } = await import('./controllers/bulkController')
   return bulkUpdateStatus(req, res)
 })
 
 app.post('/api/organizations/:organizationId/bugs/bulk/priority', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkUpdatePriority } = await import('./controllers/bulkController.js')
+  const { bulkUpdatePriority } = await import('./controllers/bulkController')
   return bulkUpdatePriority(req, res)
 })
 
 app.post('/api/organizations/:organizationId/bugs/bulk/assign', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkAssign } = await import('./controllers/bulkController.js')
+  const { bulkAssign } = await import('./controllers/bulkController')
   return bulkAssign(req, res)
 })
 
 app.post('/api/organizations/:organizationId/bugs/bulk/labels', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkAddLabels } = await import('./controllers/bulkController.js')
+  const { bulkAddLabels } = await import('./controllers/bulkController')
   return bulkAddLabels(req, res)
 })
 
 app.post('/api/organizations/:organizationId/bugs/bulk/delete', authenticate, async (req, res) => {
   req.body.organizationId = req.params.organizationId
-  const { bulkDelete } = await import('./controllers/bulkController.js')
+  const { bulkDelete } = await import('./controllers/bulkController')
   return bulkDelete(req, res)
 })
 

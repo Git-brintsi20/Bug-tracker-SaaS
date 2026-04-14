@@ -113,15 +113,23 @@ export function IssuesPageContent() {
       const response = await bugs.getAll(currentOrg.id, params)
 
       // Transform API data to match UI format
-      const transformedIssues = response.data.map((bug: any) => ({
-        id: bug.id,
-        title: bug.title,
-        status: bug.status.toLowerCase(),
-        priority: bug.priority.toLowerCase(),
-        assignee: bug.assignee ? `${bug.assignee.firstName} ${bug.assignee.lastName}` : "Unassigned",
-        created: new Date(bug.createdAt).toLocaleDateString(),
-        updated: new Date(bug.updatedAt).toLocaleDateString(),
-      }))
+      const transformedIssues = response.data.map((bug: any) => {
+        // Map API status values to UI status values
+        let status = bug.status.toLowerCase()
+        status = status === 'in_progress' ? 'in-progress' : status
+        status = status === 'in_review' ? 'review' : status
+        status = status === 'resolved' ? 'closed' : status
+
+        return {
+          id: bug.id,
+          title: bug.title,
+          status,
+          priority: bug.priority.toLowerCase(),
+          assignee: bug.assignee ? `${bug.assignee.firstName} ${bug.assignee.lastName}` : "Unassigned",
+          created: new Date(bug.createdAt).toLocaleDateString(),
+          updated: new Date(bug.updatedAt).toLocaleDateString(),
+        }
+      })
 
       setIssues(transformedIssues)
     } catch (error) {

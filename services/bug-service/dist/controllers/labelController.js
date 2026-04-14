@@ -8,23 +8,16 @@ const prisma = new client_1.PrismaClient();
 const getLabels = async (req, res) => {
     try {
         const { organizationId } = req.params;
-        // Get all bugs for organization and extract unique labels
-        const bugs = await prisma.bug.findMany({
-            where: { organizationId },
-            include: {
-                labels: true,
+        // Get all organization-level labels
+        const labels = await prisma.label.findMany({
+            where: {
+                organizationId,
+                bugId: null // Only organization-level labels
             },
+            orderBy: {
+                name: 'asc'
+            }
         });
-        // Extract unique labels
-        const labelsMap = new Map();
-        bugs.forEach(bug => {
-            bug.labels.forEach(label => {
-                if (!labelsMap.has(label.id)) {
-                    labelsMap.set(label.id, label);
-                }
-            });
-        });
-        const labels = Array.from(labelsMap.values()).sort((a, b) => a.name.localeCompare(b.name));
         res.json(labels);
     }
     catch (error) {
@@ -37,27 +30,30 @@ exports.getLabels = getLabels;
 const createLabel = async (req, res) => {
     try {
         const { organizationId } = req.params;
-        const { name, color, bugId } = req.body;
+        const { name, color, description, bugId } = req.body;
         // Validate input
-        if (!name || !color || !bugId) {
-            res.status(400).json({ error: 'Name, color, and bugId are required' });
+        if (!name || !color) {
+            res.status(400).json({ error: 'Name and color are required' });
             return;
         }
-        // Verify bug exists and belongs to organization
-        const bug = await prisma.bug.findUnique({
-            where: { id: bugId },
-        });
-        if (!bug) {
-            res.status(404).json({ error: 'Bug not found' });
-            return;
+        // If bugId is provided, verify bug belongs to organization
+        if (bugId) {
+            const bug = await prisma.bug.findUnique({
+                where: { id: bugId },
+            });
+            if (!bug) {
+                res.status(404).json({ error: 'Bug not found' });
+                return;
+            }
+            if (bug.organizationId !== organizationId) {
+                res.status(403).json({ error: 'Bug does not belong to this organization' });
+                return;
+            }
         }
-        if (bug.organizationId !== organizationId) {
-            res.status(403).json({ error: 'Bug does not belong to this organization' });
-            return;
-        }
-        // Check if label with same name exists for this bug
+        // Check if label with same name exists for this organization/bug
         const existingLabel = await prisma.label.findFirst({
             where: {
+                organizationId,
                 bugId,
                 name: {
                     equals: name,
@@ -66,13 +62,14 @@ const createLabel = async (req, res) => {
             },
         });
         if (existingLabel) {
-            res.status(400).json({ error: 'Label with this name already exists for this bug' });
+            res.status(400).json({ error: 'Label with this name already exists' });
             return;
         }
         const label = await prisma.label.create({
             data: {
                 name,
                 color,
+                organizationId,
                 bugId,
             },
         });
@@ -220,6 +217,7 @@ const addLabelToBug = async (req, res) => {
                 name,
                 color,
                 bugId,
+                organizationId: bug.organizationId,
             },
         });
         // Invalidate cache
