@@ -18,14 +18,21 @@ Designed for teams that move fast — collaborate, track progress, and ship with
 
 <br/>
 
-[**Live Demo**](#) · [**Report Bug**](https://github.com/Git-brintsi20/Bug-tracker-SaaS/issues) · [**Request Feature**](https://github.com/Git-brintsi20/Bug-tracker-SaaS/issues)
+[**Demo Video**](https://youtu.be/jkp0S1r_nMM) · [**Report Bug**](https://github.com/Git-brintsi20/Bug-tracker-SaaS/issues) · [**Request Feature**](https://github.com/Git-brintsi20/Bug-tracker-SaaS/issues)
 
 <br/>
 
-<!-- 📸 SCREENSHOTS — Add your images here later -->
-<!-- ![Dashboard Preview](public/screenshots/dashboard.png) -->
-<!-- ![Issues Page](public/screenshots/issues.png) -->
-<!-- ![Landing Page](public/screenshots/landing.png) -->
+<img src="./public/Home_page.png" alt="BugTracker homepage preview" width="100%" />
+
+<br/>
+
+<a href="https://youtu.be/jkp0S1r_nMM" target="_blank" rel="noreferrer">
+  <img src="https://img.shields.io/badge/%E2%96%B6%20Watch%20Demo%20Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo Video" />
+</a>
+
+<br/>
+
+<sub>Quick product walkthrough for managers, founders, and technical recruiters.</sub>
 
 </div>
 
@@ -33,8 +40,9 @@ Designed for teams that move fast — collaborate, track progress, and ship with
 
 <br/>
 
-## 📑 Table of Contents
+## 📑 Index
 
+- [Screenshots](#-screenshots)
 - [Highlights](#-highlights)
 - [Tech Stack](#%EF%B8%8F-tech-stack)
 - [Architecture](#-architecture)
@@ -43,10 +51,23 @@ Designed for teams that move fast — collaborate, track progress, and ship with
 - [Getting Started](#-getting-started)
 - [API Reference](#-api-reference)
 - [Project Structure](#-project-structure)
+- [Docker Commands](#-docker-commands)
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Contact](#-contact)
+
+<br/>
+
+## 🖼 Screenshots
+
+<div align="center">
+
+### Homepage Experience
+
+<img src="./public/Home_page.png" alt="BugTracker homepage" width="100%" />
+
+</div>
 
 <br/>
 
