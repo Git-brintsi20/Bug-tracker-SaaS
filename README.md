@@ -67,6 +67,38 @@ Designed for teams that move fast — collaborate, track progress, and ship with
 
 <img src="./public/Home_page.png" alt="BugTracker homepage" width="100%" />
 
+<br/>
+
+### Dashboard — Track & Visualize Your Bugs
+
+<img src="./public/AddOrganizationand MAnageFromYourDashBoard.png" alt="BugTracker dashboard with bug statistics and analytics" width="100%" />
+
+Real-time overview with total bug count, weekly trends, status distribution, and priority breakdown. Quick team insights and recent activity timeline.
+
+<br/>
+
+### Issues Management — Full Control Over Your Bugs
+
+<img src="./public/IssuesPage.png" alt="Issues page with advanced filtering and bulk operations" width="100%" />
+
+Searchable issue table with multi-select filters, bulk status/priority updates, export to CSV/PDF, and inline editing. Assign, manage status, and track everything.
+
+<br/>
+
+### Organization Settings — Configuration & Preferences
+
+<img src="./public/SettingsPage.png" alt="Settings page for organization management" width="100%" />
+
+Manage organization details, API keys, notification preferences, and system-wide configurations. Full control over your organization's environment.
+
+<br/>
+
+### Team Management & Permissions — Member Administration
+
+<img src="./public/TeamManagementAndPermissionsPage.png" alt="Team management page with role-based permissions" width="100%" />
+
+Invite team members, assign roles (Admin/Developer/Viewer), manage permissions, and track team statistics. See member details and update permissions on the fly.
+
 </div>
 
 <br/>
